@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLAYFOOD Statistics Panel</title>
+<style>
+  /* ── Palette & base treatment copied verbatim from client/public/source.html ──
+     Same pixel-art system as the certificate/source-library pages: deep navy
+     stage, parchment cards, stepped box-shadow frames, hard bevels, ZERO
+     border-radius / soft shadow / smooth gradient anywhere. */
+  :root{
+    /* brand χρώματα (brandColors.js / Brand Guideline PDF p.09-10) — κρατιούνται για το --accent */
+    --pf-green:#6DB06C; --pf-green-dk:#3E7B3D; --pf-orange:#E07F37; --pf-red:#D36244;
+    --pf-blue:#235FB7; --pf-purple:#533F8B; --pf-cream:#FBF6C9; --pf-yellow-soft:#F7E1A4;
+    --pf-yellow-green:#E0E07E; --pf-pink:#E5BDD1;
+    /* pixel-art παλέτα (PAL του certificate) */
+    --paper:#E9D29A; --paper-lite:#F2E2B6; --cream:#FFF8E1;
+    --ink:#3A2D1C; --ink-soft:rgba(58,45,28,.72); --ink-faint:rgba(58,45,28,.55);
+    --gold:#C9A24B; --gold-lite:#E7CC84; --gold-dark:#8A6A2B;
+    --wood:#6B4E2E; --wood-deep:#4C3826; --outline:#241608;
+    --stage:#0E3A40;
+    --accent:var(--pf-green);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink); line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background-color:var(--stage);
+    background-image:repeating-conic-gradient(rgba(255,255,255,.035) 0% 25%, rgba(0,0,0,.05) 0% 50%);
+    background-size:8px 8px;
+    image-rendering:pixelated;
+    overflow-x:hidden; /* the page itself never scrolls sideways — wide content scrolls in its own box */
+  }
+
+  /* ── in-game top bar: συμπαγές ξύλο, σκληρό bevel, χωρίς border-radius ── */
+  .top{
+    position:relative; z-index:5;
+    background:var(--wood-deep);
+    padding:12px 22px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    box-shadow:inset 0 3px 0 rgba(255,255,255,.12), inset 0 -5px 0 rgba(0,0,0,.4), 0 5px 0 var(--outline);
+  }
+  .logo{
+    color:var(--cream); font-weight:900; letter-spacing:4px; font-size:18px;
+    text-shadow:3px 3px 0 var(--outline);
+  }
+  .logo .leaf{display:inline-block; transform:translateY(1px); margin-right:7px}
+  .logo .sub{margin-left:12px; font-size:12px; font-weight:700; letter-spacing:1px; color:rgba(255,248,225,.7); text-transform:none}
+  .backbtn{
+    color:var(--cream); font-size:12px; font-weight:800; letter-spacing:.5px;
+    cursor:pointer; background:var(--wood); border:0; border-radius:0; padding:8px 14px;
+    font-family:inherit;
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.2), inset -2px -2px 0 rgba(0,0,0,.4), 0 4px 0 var(--outline);
+  }
+  .backbtn:hover{background:#7d5c38}
+  .backbtn:active{transform:translateY(4px); box-shadow:inset 2px 2px 0 rgba(255,255,255,.2), inset -2px -2px 0 rgba(0,0,0,.4), 0 0 0 2px var(--outline)}
+  #whoami{margin-left:auto; font-size:12px; color:rgba(255,248,225,.75); display:none; align-items:center; gap:12px}
+
+  main{max-width:1180px; margin:28px auto 60px; padding:0 20px}
+
+  /* ── hero: κάρτα-ευρετήριο με chunky stepped-corner pixel frame (outline→gold→wood) ──
+     reused verbatim for the single-purpose screens: no-server, disabled, login. */
+  .hero{
+    position:relative; background:var(--paper);
+    border:4px solid var(--outline); border-radius:0;
+    margin:14px auto 44px; max-width:460px; padding:26px 30px 28px; image-rendering:pixelated;
+    box-shadow:
+      -4px 0 0 var(--outline),4px 0 0 var(--outline),0 -4px 0 var(--outline),0 4px 0 var(--outline),
+      -8px 0 0 var(--gold),8px 0 0 var(--gold),0 -8px 0 var(--gold),0 8px 0 var(--gold),
+      -12px 0 0 var(--wood-deep),12px 0 0 var(--wood-deep),0 -12px 0 var(--wood-deep),0 12px 0 var(--wood-deep),
+      inset 4px 4px 0 rgba(255,250,235,.35), inset -4px -4px 0 rgba(120,80,30,.18);
+  }
+  .hero .kicker{font-size:11px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; color:var(--gold-dark)}
+  .hero h1{
+    margin:10px 0 6px; font-weight:800;
+    font-size:clamp(22px,4vw,30px); line-height:1.16; letter-spacing:-.4px;
+    color:#2E2620;
+  }
+  .hero p{font-size:14px; color:var(--ink-soft); margin:0 0 16px; line-height:1.6}
+  .hero code{background:var(--wood-deep); color:var(--cream); padding:2px 7px; border-radius:0; font-size:13px}
+
+  /* ── screens: only one visible at a time ── */
+  .screen[hidden]{display:none}
+
+  /* ── generic hard-edge form controls & buttons, matching the bevel language above ── */
+  label{display:block; margin:0 0 14px; font-size:13px; font-weight:700; color:var(--ink-soft)}
+  input[type=email], input[type=password], input[type=date]{
+    display:block; width:100%; margin-top:6px; font-family:inherit; font-size:14.5px;
+    padding:10px 12px; border:2px solid var(--outline); border-radius:0;
+    background:var(--cream); color:var(--ink);
+  }
+  input[type=email]:focus, input[type=password]:focus, input[type=date]:focus{
+    outline:2px solid var(--gold-dark); outline-offset:1px;
+  }
+  .btn{
+    font-family:inherit; font-weight:800; font-size:13.5px; letter-spacing:.3px; color:var(--cream);
+    background:var(--wood); border:3px solid var(--outline); border-radius:0; padding:11px 20px; cursor:pointer;
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.16), inset -2px -2px 0 rgba(0,0,0,.35), 0 4px 0 var(--outline);
+  }
+  .btn:hover{background:#7d5c38}
+  .btn:active{transform:translateY(4px); box-shadow:inset 2px 2px 0 rgba(255,255,255,.16), inset -2px -2px 0 rgba(0,0,0,.35), 0 0 0 2px var(--outline)}
+  .btn:disabled{opacity:.55; cursor:default; transform:none}
+  .btn.wide{width:100%}
+  .retry{
+    font-family:inherit; font-weight:800; font-size:12.5px; color:var(--ink);
+    background:var(--gold); border:3px solid var(--outline); border-radius:0; padding:9px 16px; cursor:pointer;
+    box-shadow:inset 2px 2px 0 var(--gold-lite), inset -2px -2px 0 var(--gold-dark), 0 3px 0 var(--outline);
+  }
+  .retry:hover{background:var(--gold-lite)}
+  .retry:active{transform:translateY(3px); box-shadow:inset 2px 2px 0 var(--gold-lite), inset -2px -2px 0 var(--gold-dark), 0 0 0 2px var(--outline)}
+
+  /* No red, no colour-coded judgement anywhere in this file: errors and notices
+     are conveyed by wording and a neutral bordered box only — never colour. */
+  .err{
+    color:var(--ink); font-weight:700; font-size:13px; margin:0 0 14px;
+    background:var(--paper-lite); border:2px solid var(--outline); padding:9px 12px;
+  }
+
+  /* ── dashboard section panel: a lighter, repeatable sibling of .hero ── */
+  .panel{
+    background:var(--paper); border:3px solid var(--outline); border-radius:0;
+    padding:20px 24px 24px; margin:0 0 26px; image-rendering:pixelated;
+    box-shadow:6px 6px 0 var(--wood-deep);
+  }
+  .panel h2{margin:0 0 3px; font-size:12px; font-weight:900; letter-spacing:2.2px; text-transform:uppercase; color:var(--gold-dark)}
+  .panel .panel-sub{font-size:16px; line-height:1.55; color:var(--ink-soft); margin:0 0 18px}
+
+  /* ── filters ── */
+  .filterbar{
+    display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;
+    background:var(--paper); border:3px solid var(--outline); padding:16px 20px; margin:0 0 24px;
+    box-shadow:6px 6px 0 var(--wood-deep);
+  }
+  .presets{display:flex; gap:8px; flex-wrap:wrap}
+  .presets button{
+    font-family:inherit; font-weight:800; font-size:12.5px; padding:8px 14px;
+    border:3px solid var(--outline); border-radius:0; background:var(--cream); color:var(--ink);
+    cursor:pointer; box-shadow:0 3px 0 var(--outline);
+  }
+  .presets button:hover{background:var(--paper-lite)}
+  .presets button.active{
+    background:var(--gold);
+    box-shadow:inset 2px 2px 0 var(--gold-lite), inset -2px -2px 0 var(--gold-dark), 0 3px 0 var(--outline);
+  }
+  .daterange{display:flex; gap:14px; flex-wrap:wrap; align-items:center}
+  .daterange label{display:flex; align-items:center; gap:8px; margin:0; font-size:12.5px; white-space:nowrap}
+  .daterange input[type=date]{width:auto; margin-top:0}
+
+  /* ── overview cards ── */
+  /* Three participation headlines stay together, or stack on narrow screens. */
+  .cards{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+  @media (max-width:700px){ .cards{grid-template-columns:1fr} }
+  .card{
+    background:var(--cream); border:3px solid var(--outline); padding:16px 16px 14px;
+    box-shadow:4px 4px 0 var(--wood-deep); display:flex; flex-direction:column; gap:3px;
+  }
+  .card .num{font-size:clamp(22px,3vw,30px); font-weight:900; color:var(--ink); line-height:1.05; font-variant-numeric:tabular-nums}
+  .card .lbl{font-size:11.5px; font-weight:800; letter-spacing:.4px; color:var(--ink-soft); text-transform:uppercase; margin-top:4px}
+  .card .sub{font-size:11px; color:var(--ink-soft); line-height:1.4}
+
+  /* ── «who is playing»: ίδια γλώσσα με το χωνί — οριζόντια μπάρα, ουδέτερο
+     χρώμα, κανένας χρωματικός χαρακτηρισμός καλού/κακού. ── */
+  .subhead{margin:0 0 10px; font-size:11.5px; font-weight:900; letter-spacing:1.4px; text-transform:uppercase; color:var(--gold-dark)}
+  .bargroup{margin:0 0 18px}
+  .bargroup:last-child{margin-bottom:0}
+  .bar-row{display:grid; grid-template-columns:110px 1fr 90px; align-items:center; gap:12px; margin:0 0 8px}
+  .bar-row:last-child{margin-bottom:0}
+  .bar-label{font-size:13px; font-weight:800; color:var(--ink)}
+  .bar-track{background:var(--paper-lite); border:2px solid var(--outline); height:20px}
+  .bar-fill{background:var(--pf-blue); height:100%}
+  .bar-value{font-size:12.5px; font-weight:700; color:var(--ink-soft); text-align:right; font-variant-numeric:tabular-nums}
+  @media (max-width:640px){
+    .bar-row{grid-template-columns:1fr; gap:4px}
+    .bar-value{text-align:left}
+  }
+
+  /* ── funnel ── */
+  .funnel-step{margin:0 0 13px}
+  .funnel-step:last-child{margin-bottom:0}
+  .funnel-row{display:grid; grid-template-columns:150px 1fr 130px; align-items:center; gap:14px; margin:0}
+  .funnel-label{font-size:13.5px; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:7px}
+
+  /* Το «i»: πραγματικό <button> ώστε να δουλεύει με πληκτρολόγιο και αφή.
+     Κλικ (όχι hover) γιατί το panel μπορεί να ανοιχτεί σε tablet ή διαδραστικό
+     πίνακα, όπου hover δεν υπάρχει και η εξήγηση θα γινόταν απρόσιτη. */
+  .infobtn{
+    font-family:inherit; font-weight:900; font-size:11px; line-height:1;
+    width:19px; height:19px; flex:0 0 19px; padding:0; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:var(--paper-lite); color:var(--ink);
+    border:2px solid var(--outline); border-radius:0;
+  }
+  .infobtn:hover{background:var(--gold-lite)}
+  .infobtn[aria-expanded="true"]{background:var(--gold)}
+  .infobtn:focus-visible{outline:2px solid var(--gold-dark); outline-offset:1px}
+  .funnel-note{
+    margin:8px 0 0; padding:10px 13px; font-size:16px; line-height:1.55; color:var(--ink);
+    background:var(--cream); border:2px solid var(--outline);
+  }
+  .funnel-note[hidden]{display:none}
+  .funnel-track{background:var(--paper-lite); border:2px solid var(--outline); height:24px; position:relative}
+  .funnel-fill{background:var(--pf-blue); height:100%}
+  .funnel-value{font-size:12.5px; font-weight:700; color:var(--ink-soft); text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums}
+  @media (max-width:640px){
+    .funnel-row{grid-template-columns:1fr; gap:4px}
+    .funnel-value{text-align:left}
+  }
+
+  /* ── per-game table ── */
+  .table-wrap{overflow-x:auto; border:2px solid var(--outline)}
+  table{width:100%; border-collapse:collapse; background:var(--cream); font-size:13.5px; min-width:720px}
+  th, td{padding:9px 14px; text-align:left; border-bottom:2px solid var(--outline); white-space:nowrap}
+  th{background:var(--wood); color:var(--cream); font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; font-weight:900}
+  tbody tr:nth-child(even){background:var(--paper-lite)}
+  tbody tr:last-child td{border-bottom:none}
+  /* Οι αριθμητικές στήλες ΚΕΝΤΡΑΡΟΝΤΑΙ. Με δεξιά στοίχιση τα δεξιά άκρα
+     ταίριαζαν στο pixel (μετρημένο), αλλά η επικεφαλίδα είναι ως και
+     τετραπλάσια σε πλάτος από την τιμή («Avg Score» πάνω από «80»), οπότε ο
+     αριθμός κάθεται κάτω από το ΤΕΛΟΣ της λέξης και διαβάζεται ως στραβός.
+     Με τρεις γραμμές ανά πίνακα, η οπτική αντιστοίχιση επικεφαλίδας-τιμής
+     αξίζει περισσότερο από τη στοίχιση των ψηφίων μεταξύ τους — που ούτως ή
+     άλλως τη διατηρεί το tabular-nums μέσα στη στήλη. */
+  td.num, th.num{text-align:center; font-variant-numeric:tabular-nums}
+  .outcome-breakdown{margin-top:4px;font-size:11px;line-height:1.5;white-space:normal;min-width:110px;color:var(--ink-soft)}
+
+  /* ── ένας πίνακας ανά νησί ── */
+  .island-block + .island-block{margin-top:24px}
+  .island-head{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px;
+    margin:0 0 8px; padding-bottom:6px; border-bottom:2px solid var(--outline);
+  }
+  .island-name{font-size:14px; font-weight:900; color:var(--ink)}
+  .island-num{color:var(--ink-soft); font-weight:700}
+  /* Τα νούμερα του νησιού σε δική τους γραμμή, κάτω από τον τίτλο και σε πεζά
+     βάρος: είναι το πλαίσιο του πίνακα, όχι ανταγωνιστής του. Ουδέτερα — καμία
+     σήμανση, καμία κόκκινη απόχρωση, ό,τι κι αν λένε (ρητή απόφαση §9.3):
+     ούτε καν ένα χαμηλό ποσοστό ολοκλήρωσης χρωματίζεται ως προειδοποίηση.
+     Το flex:1 0 100% ΕΠΙΒΑΛΛΕΙ τη δική τους γραμμή. Με το προηγούμενο
+     margin-left:auto τα πέντε στοιχεία χωρούσαν οριακά δίπλα στον τίτλο στις
+     1440 και τυλίγονταν στις 900 — και τυλιγμένα κρατούσαν το auto περιθώριο,
+     οπότε κάθε νησί ξεκινούσε από ΑΛΛΗ οριζόντια θέση ανάλογα με το μήκος των
+     τιμών του. Τώρα και τα τέσσερα ευθυγραμμίζονται με την αριστερή ακμή του
+     πίνακα σε κάθε πλάτος.
+     Μέσα στη λωρίδα, το wrap σπάει ΑΝΑΜΕΣΑ σε στοιχεία και ποτέ ανάμεσα σε
+     ετικέτα και τιμή (το nowrap παρακάτω κρατά κάθε ζευγάρι μαζί). Τα κενά
+     κάνουν τη δουλειά των διαχωριστικών: μια σειρά από «·» που τυλίγεται
+     αφήνει τελείες να κρέμονται στην αρχή ή στο τέλος της γραμμής. */
+  .island-facts{
+    flex:1 0 100%; font-size:12.5px; color:var(--ink-soft);
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 18px;
+    font-variant-numeric:tabular-nums;
+  }
+  .island-facts > span{white-space:nowrap}
+
+  /* ── star distribution ── */
+  /* Τρία ψυχρά σκαλοπάτια αντί για τρεις αποχρώσεις χρυσού: γαλαζοπράσινο,
+     ατσαλί μπλε, βαθύ ίντιγκο. Ο χρυσός χανόταν μέσα στην περγαμηνή (καφέ σε
+     καφέ σε καφέ) και τα τρία επίπεδα ξεχώριζαν μόνο από τη φωτεινότητα· το
+     ψυχρό αποκόβεται αμέσως από το ζεστό φόντο και ξεκουράζει το μάτι.
+     Η κλίμακα είναι ΒΑΘΟΣ, όχι αξία: μονότονα πιο σκούρο από το 1 στο 3, ώστε
+     να διαβάζεται ως σειρά και όχι ως τρεις ετυμηγορίες. Κανένα κόκκινο,
+     κανένα «καλό/κακό» χρώμα (§9.3) — η ερμηνεία ανήκει στον άνθρωπο. */
+  .stars-grid{
+    display:flex; flex-direction:column; gap:22px;
+    --star-1:#4FA0A8; --star-2:#3A6E96; --star-3:#3E3C72;
+  }
+  /* Ένα νησί ανά σειρά, τρία παιχνίδια στη σειρά: ίδιος χάρτης με το «Per Game»
+     από πάνω, ώστε ο δάσκαλος να μη χρειάζεται δεύτερο μοντέλο στο μυαλό του.
+     Δικά μας ονόματα κλάσεων (όχι .island-head) για να μένουν οι δύο ενότητες
+     ανεξάρτητες στο styling. */
+  .stars-island-head{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px;
+    margin:0 0 10px; padding-bottom:6px; border-bottom:2px solid var(--outline);
+  }
+  .stars-island-num{font-size:14px; font-weight:700; color:var(--ink-soft)}
+  .stars-island-name{font-size:14px; font-weight:900; color:var(--ink)}
+  .stars-island-games{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+  @media (max-width:700px){ .stars-island-games{grid-template-columns:1fr} }
+  .star-card{background:var(--cream); border:3px solid var(--outline); padding:14px 16px; box-shadow:4px 4px 0 var(--wood-deep)}
+  .star-card h3{margin:0 0 10px; font-size:13px; font-weight:900; color:var(--ink)}
+  .star-row{display:grid; grid-template-columns:30px 1fr 34px; align-items:center; gap:8px; margin:0 0 6px; font-size:12px}
+  .star-row:last-child{margin-bottom:0}
+  .star-label{font-weight:800; color:var(--ink); white-space:nowrap}
+  /* Το ★ χρυσό, με σκληρή pixel σκιά ενός εικονοστοιχείου ώστε να κάθεται πάνω
+     στο κρεμ αντί να ξεπλένεται. Ο αριθμός δίπλα μένει σε μελάνι: το σύμβολο
+     είναι το βραβείο, η μέτρηση είναι η μέτρηση. */
+  .star-glyph{color:var(--gold); text-shadow:1px 1px 0 var(--gold-dark)}
+  .star-track{background:var(--paper-lite); border:2px solid var(--outline); height:14px}
+  .star-fill{height:100%}
+  .star-fill.s0{background:var(--muted, #777)}
+  .star-fill.s1{background:var(--star-1)}
+  .star-fill.s2{background:var(--star-2)}
+  .star-fill.s3{background:var(--star-3)}
+  .star-count{text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-soft)}
+
+  /* ── «right now»: κατάσταση εγκατάστασης, ΑΝΕΞΑΡΤΗΤΗ από το φίλτρο ──
+     Κάθεται ΠΑΝΩ από τα κουμπιά περιόδου επίτηδες: ό,τι βρίσκεται πάνω από το
+     φίλτρο διαβάζεται ως «η κατάσταση τώρα», και μετά ο χρήστης επιλέγει εύρος
+     για ανάλυση. Όσο το «active this week» καθόταν μέσα στις κάρτες
+     επισκόπησης, φαινόταν να ακολουθεί το φίλτρο ενώ ποτέ δεν το έκανε. */
+  .nowstrip{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--paper); border:3px solid var(--outline); padding:12px 20px; margin:0 0 16px;
+    box-shadow:6px 6px 0 var(--wood-deep);
+    font-size:13px; color:var(--ink-soft);
+  }
+  .nowstrip .tick{font-size:16px}
+  .collection-diagnostics{
+    font-size:12px;line-height:1.55;margin:0 0 20px;overflow-wrap:anywhere;
+    color:var(--ink-soft);background:var(--paper);padding:10px 20px;
+  }
+  .collection-diagnostics summary{cursor:pointer}
+  .collection-diagnostics p{margin:8px 0 0}
+  /* A failed load hides the figures: old numbers under a new filter would read as the new answer. */
+  #dashboard.stale .panel:not(.actions-panel), #dashboard.stale .nowstrip, #dashboard.stale .collection-diagnostics{display:none}
+
+  /* ── actions ── */
+  .actions{display:flex; flex-wrap:wrap; gap:12px; margin:0}
+
+  footer{
+    max-width:1180px; margin:0 auto; padding:8px 22px 56px; color:rgba(255,248,225,.65); font-size:12px; text-align:center;
+  }
+
+  footer a{color:var(--paper);text-underline-offset:3px}
+
+  /* ══ PRINT · «Export PDF» ══════════════════════════════════════════════════
+     Σκόπιμα print stylesheet + window.print() και τίποτε άλλο: καμία βιβλιοθήκη,
+     κανένα CDN, κανένα build step. Το panel μένει ΕΝΑ αυτοτελές αρχείο που
+     δουλεύει και σε σχολικό μηχάνημα χωρίς internet.
+     Ίδια σύμβαση με το πιστοποιητικό (client/src/screens/CertificateScreen.jsx)
+     και τη σελίδα πηγών (client/public/source.html): @page σε A4, το σκούρο
+     φόντο φεύγει, το on-screen chrome κρύβεται, καμία στρογγυλή γωνία πουθενά.
+     Μπαίνει ΤΕΛΕΥΤΑΙΟ στο <style> επίτηδες, ώστε να κερδίζει κάθε ισοβαθμία
+     specificity με τους παραπάνω κανόνες οθόνης. */
+
+  /* Η κεφαλίδα του χαρτιού δεν έχει θέση στην οθόνη: εκεί υπάρχει ήδη η μπάρα. */
+  .printhead{display:none}
+
+  @page{ size:A4 portrait; margin:14mm 12mm; }
+
+  @media print{
+    /* Το βαθύ μπλε «σκηνικό» ΔΕΝ πάει στο χαρτί: πλημμυρίζει τη σελίδα με μελάνι
+       και αφήνει το κείμενο αχνό σε κάθε ασπρόμαυρο εκτυπωτή. */
+    html, body{
+      background:#fff !important; background-image:none !important;
+      color:var(--ink) !important; overflow:visible !important;
+    }
+    body{font-size:9pt; line-height:1.45}
+    main{max-width:none !important; width:auto !important; margin:0 !important; padding:0 !important}
+
+    /* Ό,τι δεν έχει νόημα σε χαρτί: η μπάρα με το «Sign out», τα κουμπιά περιόδου
+       και οι ημερομηνίες (η περίοδος τυπώνεται ως κείμενο στην κεφαλίδα), το ίδιο
+       το panel των ενεργειών, και τα «i» που ανοίγουν επεξήγηση με κλικ. */
+    .top, .filterbar, .actions-panel, .infobtn, .nowstrip, .collection-diagnostics{display:none !important}
+
+    .printhead{
+      display:block !important; margin:0 0 4mm; padding:0 0 2.5mm;
+      border-bottom:3px solid var(--outline);
+    }
+    .printhead .ph-title{font-size:15pt; font-weight:900; letter-spacing:3px; color:var(--ink)}
+    .printhead .ph-period{margin-top:1.5mm; font-size:9.5pt; color:var(--ink-soft)}
+
+    /* Λευκό «χαρτί» με το περίγραμμα ΑΘΙΚΤΟ: το πλαίσιο είναι η δομή της σελίδας,
+       η ώχρα ήταν ατμόσφαιρα οθόνης. Οι stepped σκιές φεύγουν — τυπωμένες
+       διαβάζονται ως μουτζούρα και τρώνε πλάτος από το περιεχόμενο.
+       Τα κενά είναι σφιχτότερα από την οθόνη ΟΧΙ για αισθητική: κάθε panel μένει
+       ακέραιο (βλ. break-inside παρακάτω), οπότε ένα φαρδύ κενό αρκεί για να
+       πεταχτεί ένα ολόκληρο panel στην επόμενη σελίδα και να μείνει μισή κόλλα
+       λευκή. Σφιχτότερα κενά = λιγότερο χαρτί, ίδια αναγνωσιμότητα. */
+    .panel, .nowstrip{
+      background:#fff !important; box-shadow:none !important;
+      border:2px solid var(--outline) !important;
+      padding:4mm 5mm !important; margin:0 0 4mm !important;
+    }
+    .nowstrip{padding:3mm 5mm !important}
+    .card, .star-card{
+      background:#fff !important; box-shadow:none !important;
+      border:2px solid var(--outline) !important; padding:2.5mm !important;
+    }
+    .panel h2{font-size:9.5pt; margin-bottom:1mm}
+    .panel .panel-sub{font-size:8.5pt; margin-bottom:2.5mm}
+
+    /* Σταθερά 3 στήλες: το τυπώσιμο πλάτος του A4 (186mm ≈ 703px) πέφτει ακριβώς
+       πάνω στο breakpoint των 700px της οθόνης, οπότε χωρίς ρητή τιμή η διάταξη
+       θα κρεμόταν από στρογγυλοποίηση του browser. */
+    .cards{grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:2.5mm !important}
+    .card .num{font-size:14pt}
+    .card .lbl{font-size:7.5pt; margin-top:2px}
+    .card .sub{font-size:7pt}
+    .stars-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:2.5mm !important}
+    .star-card h3{font-size:8.5pt; margin-bottom:6px}
+
+    /* Ο πίνακας ΔΕΝ κόβεται δεξιά: το min-width:720px της οθόνης είναι πλατύτερο
+       από το τυπώσιμο πλάτος, και το overflow-x:auto δεν κυλάει σε χαρτί — απλώς
+       εξαφανίζει σιωπηλά τις τελευταίες στήλες. Με white-space:normal ό,τι δεν
+       χωράει αναδιπλώνεται αντί να ξεχειλίσει, όσες στήλες κι αν έχει ο πίνακας. */
+    .table-wrap{overflow:visible !important; border-width:2px !important}
+    table{min-width:0 !important; width:100% !important; font-size:8pt !important}
+    th, td{padding:3px 5px !important; white-space:normal !important; border-bottom-width:1px !important}
+    th{font-size:6.5pt !important; background:#EDE7D6 !important; color:var(--ink) !important}
+    tbody tr:nth-child(even){background:#F7F3E7 !important}
+    .island-name{font-size:10pt}
+    .island-facts{font-size:8pt}
+
+    /* Οι μπάρες τυπώνονται όπως φαίνονται: ο Chrome σέβεται το print-color-adjust
+       ακόμη κι όταν ο χρήστης δεν έχει τσεκάρει «background graphics». Ουδέτερο
+       χρώμα παντού, κανένας χρωματικός χαρακτηρισμός (§9.3). */
+    .bar-track, .bar-fill, .funnel-track, .funnel-fill, .star-track, .star-fill,
+    th, tbody tr:nth-child(even){
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    .bar-track, .funnel-track{height:14px !important}
+    .star-track{height:10px !important}
+    .bar-row{margin-bottom:4px}
+    .bargroup{margin-bottom:10px}
+    .funnel-step{margin-bottom:6px}
+    .island-block + .island-block{margin-top:5mm}
+
+    /* Τίποτα δεν κόβεται στη μέση από αλλαγή σελίδας. Κρίσιμο για το «ένας πίνακας
+       ανά νησί»: μισός πίνακας στην κάτω άκρη μιας σελίδας δεν διαβάζεται.
+       Το ίδιο ισχύει και για ΟΛΟΚΛΗΡΟ το panel: το πλαίσιό του είναι η δομή της
+       σελίδας, και μια αλλαγή σελίδας στη μέση το κόβει σε δύο μισά κουτιά που
+       μοιάζουν με σφάλμα εκτύπωσης. Αν κάποιο panel δεν χωράει ποτέ σε μία σελίδα,
+       ο browser το σπάει έτσι κι αλλιώς — δεν χάνεται περιεχόμενο. */
+    .panel, .island-block, .card, .star-card, .funnel-step, .bar-row, .bargroup,
+    .table-wrap, .nowstrip{
+      break-inside:avoid; page-break-inside:avoid;
+    }
+    .panel h2, .panel .panel-sub, .island-head, .subhead{
+      break-after:avoid; page-break-after:avoid;
+    }
+
+    footer{
+      max-width:none !important; margin:0 !important;
+      padding:4mm 0 0 !important; font-size:7.5pt !important;
+      color:var(--ink-soft) !important; border-top:2px solid var(--outline);
+    }
+  }
+</style>
+<link rel="stylesheet" href="/panel/calendar.css">
+<style>
+  .review-filters { background:var(--paper); border:3px solid var(--outline); padding:22px 24px; margin-bottom:26px; box-shadow:6px 6px 0 var(--wood-deep); }
+  .review-filters .filterbar { background:none; border:0; padding:0 0 20px; margin:0; box-shadow:none; gap:18px; }
+  .period-controls > span { display:block; font-weight:700; margin-bottom:10px; }
+  .review-filters .presets button { min-height:44px; box-shadow:none; border-width:1px; font-size:14px; }
+  .review-filters .presets button.active { background:var(--wood); color:var(--cream); box-shadow:none; }
+  .language-filter { min-width:0; margin:0; padding:18px 0 0; border:0; border-top:1px solid var(--gold-dark); }
+  .language-filter legend { float:left; width:100%; font-weight:700; padding:0; margin-bottom:12px; }
+  .language-options { clear:both; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+  .language-options label { position:relative; margin:0; cursor:pointer; color:var(--ink); }
+  .language-options input { position:absolute; width:1px; height:1px; opacity:0; }
+  .language-options .language-choice { display:flex; align-items:center; justify-content:center; gap:8px; min-height:52px; padding:10px 8px; border:1px solid var(--gold-dark); background:var(--cream); font-size:15px; }
+  .language-options input:checked + .language-choice { background:var(--pf-green-dk); border-color:var(--pf-green-dk); color:white; }
+  .language-options input:checked + .language-choice::after { content:'✓'; font-weight:800; }
+  .language-options input:focus-visible + .language-choice { outline:3px solid var(--pf-blue); outline-offset:3px; }
+  .filter-context { display:flex; flex-direction:column; align-items:flex-start; gap:12px; margin-top:16px; }
+  #languageExplanation { margin:0; font-size:16px; line-height:1.55; max-width:65ch; }
+  .filter-help { font-size:16px; width:100%; max-width:65ch; min-width:0; }
+  .filter-help summary { cursor:pointer; font-weight:700; text-decoration:underline; text-underline-offset:3px; padding:8px 0; line-height:1.5; overflow-wrap:break-word; }
+  .filter-help summary:focus-visible { outline:3px solid var(--pf-blue); outline-offset:3px; }
+  .filter-help p { margin:10px 0 0; }
+  #filterStatus { color:var(--ink); background:var(--cream); padding:12px 16px; border-left:4px solid var(--gold-dark); line-height:1.55; }
+  @media(max-width:650px) {
+    .review-filters { padding:18px 14px; }
+    .language-options { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .language-options label:first-child { grid-column:1/-1; }
+    .review-filters .daterange { width:100%; gap:10px; }
+    .review-filters .daterange label { flex:1; min-width:0; display:block; }
+    .review-filters .daterange input { width:100%; min-width:0; margin-top:6px; }
+  }
+  button:disabled { opacity: .55; cursor: wait; }
+  @media print { .review-filters { display:none; } }
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="logo"><span class="leaf">🌱</span>PLAYFOOD<span class="sub">Statistics Panel</span></span>
+  <span id="whoami"><span id="whoamiEmail"></span><button class="backbtn" id="signout">Sign out</button></span>
+</div>
+<main>
+
+  <section id="noServer" class="screen hero" hidden>
+    <div class="kicker">Connection</div>
+    <h1>No server found</h1>
+    <p>This page could not reach the PLAYFOOD server component. Statistics require the server to be running alongside the game. If this installation serves only the game itself, there is nothing to see here.</p>
+    <button class="retry" id="retryNoServer">Try again</button>
+  </section>
+
+  <section id="disabled" class="screen hero" hidden>
+    <div class="kicker">Statistics</div>
+    <h1>This feature is not enabled.</h1>
+    <p>
+      Open <code>server/playfood.config.txt</code> and set <code>PANEL_ENABLED = yes</code>, then save.<br>
+      It takes effect within 30 seconds; no restart is needed.
+    </p>
+    <button class="retry" id="retryDisabled">Check again</button>
+  </section>
+
+  <section id="login" class="screen hero" hidden>
+    <div class="kicker">PLAYFOOD</div>
+    <h1>Statistics Panel</h1>
+    <label>Email <input id="email" type="email" autocomplete="username"></label>
+    <label>Password <input id="password" type="password" autocomplete="current-password"></label>
+    <p id="loginError" class="err" role="alert" hidden>Wrong email or password.</p>
+    <button id="signin" class="btn wide">Sign in</button>
+  </section>
+
+  <section id="dashboard" class="screen" hidden>
+
+    <!-- Paper only. The wooden top bar and the period buttons are hidden when
+         printing, so without this the PDF would carry no title and, worse, no
+         statement of which days the numbers cover. -->
+    <div class="printhead">
+      <div class="ph-title">🌱 PLAYFOOD Statistics Panel</div>
+      <div class="ph-period" id="printPeriod">All time; every day recorded so far.</div>
+      <div class="ph-period" id="printGenerated"></div>
+    </div>
+
+    <section class="review-filters" aria-label="Statistics filters">
+    <div class="filterbar">
+      <div class="period-controls"><span>Period</span>
+      <div class="presets">
+        <button type="button" data-preset="today">Today</button>
+        <button type="button" data-preset="7d">7 days</button>
+        <button type="button" data-preset="30d">30 days</button>
+        <button type="button" data-preset="all" class="active">All</button>
+      </div>
+      </div>
+      <div class="daterange">
+        <label>From <input type="date" id="fromDate"></label>
+        <label>To <input type="date" id="toDate"></label>
+      </div>
+    </div>
+
+    <fieldset class="language-filter">
+      <legend>Game language</legend>
+      <div class="language-options">
+        <label><input type="radio" name="gameLanguage" value="" checked><span class="language-choice">All languages</span></label>
+        <label><input type="radio" name="gameLanguage" value="en"><span class="language-choice">🇬🇧 English</span></label>
+        <label><input type="radio" name="gameLanguage" value="nl"><span class="language-choice">🇧🇪 Dutch</span></label>
+        <label><input type="radio" name="gameLanguage" value="el"><span class="language-choice">🇬🇷 Greek</span></label>
+        <label><input type="radio" name="gameLanguage" value="pt"><span class="language-choice">🇵🇹 Portuguese</span></label>
+      </div>
+    </fieldset>
+    <div class="filter-context">
+      <details class="filter-help"><summary>What does this filter mean?</summary><p id="languageExplanation" aria-live="polite"></p><p>We filter recorded activity by the chosen game language, not the player’s country. A browser profile can contribute activity in more than one language. Charts, game tables and exports follow your selection. Server totals below the overview remain unfiltered.</p></details>
+    </div>
+    </section>
+    <p id="filterStatus" role="status" hidden></p>
+
+    <div class="panel">
+      <h2>Overview</h2>
+      <p class="panel-sub">Counts for the selected period and game language. Totals include recorded games from earlier versions. Their star distributions appear under Historical games outside the current catalogue. Confirmed 3/3 and 12/12 completion use only the current games in their assigned islands.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="num" id="cGameProfiles">0</div>
+          <div class="lbl">Game Profiles</div>
+          <div class="sub">profiles that opened at least one game</div>
+        </div>
+        <div class="card">
+          <div class="num" id="cFinished">0</div>
+          <div class="lbl" id="cFinishedLabel">Missions Completed</div>
+          <div class="sub" id="cOutcomes">each game counts once per browser profile</div>
+        </div>
+        <div class="card">
+          <div class="num" id="cFinished12">0</div>
+          <div class="lbl">Reached 12/12</div>
+          <div class="sub">profiles with confirmed passes in all twelve games during this period</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nowstrip">
+      <span class="tick">✅</span>
+      <span id="nowText">Checking…</span>
+    </div>
+    <details class="collection-diagnostics">
+      <summary>Collection diagnostics</summary>
+      <p id="collectionStatus"></p>
+    </details>
+
+    <div class="panel">
+      <h2>Who Is Playing</h2>
+      <p class="panel-sub">Profiles are random IDs stored in the browser, not verified counts of children. Children sharing a browser may share one profile; clearing browser data or switching browsers may create another. If browser storage is unavailable, the ID lasts only for the current page load.</p>
+      <p class="panel-sub">Game Profiles counts each profile once when a game start, finish or quit is recorded in the selected period and language. Opening a game includes its introduction and does not prove that the child began answering. Opening or refreshing the landing page alone does not count. A Play Code restores game progress, not this ID: using the same code on another browser does not link the profiles.</p>
+      <p class="panel-sub">The language bars count game profiles once per recorded game language. A profile that opens games in several languages can appear in several bars.</p>
+      <div class="bargroup">
+        <h3 class="subhead">Languages</h3>
+        <div id="langBars"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Game Participation</h2>
+      <p class="panel-sub">How far game profiles get within the selected period and language. Each step counts profiles that reached <strong>at least</strong> that point. Percentages use the profiles that opened a game as their denominator.</p>
+      <p class="panel-sub">Island completion and 12/12 require confirmed passes in the selected period and language, not lifetime progress. Older outcomes without a recorded pass/fail remain unknown and cannot confirm completion.</p>
+      <div id="funnel"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Per Game</h2>
+      <p class="panel-sub">All twelve games, with one table per island, including any island or game that nobody has touched yet.</p>
+      <p class="panel-sub">Started counts recorded round starts; Rounds Ended counts recorded round finishes. Both follow the selected period and language and include replays. Matched rate counts only identified starts and their matching finishes within that selection, shown as finishes/starts. A finish means the round ended, not necessarily that it was passed. Unpaired finishes include older results and results whose start is missing or outside the filter. “—” means no identified starts are available.</p>
+      <p class="panel-sub">Elapsed times include instructions, pauses, hidden tabs and inactivity. The new time split averages only measured rounds, including quits. Play = available gameplay with recent input; Guidance = instructional/help/decision panels displayed, not proof of reading; Pause = pause/exit menu; Away = hidden or unfocused page (including external source tabs); Possible idle = time beyond 5 minutes without input during play or guidance; Other = loading, transitions and results. Categories do not overlap. Older rounds have no split.</p>
+      <p class="panel-sub">Quit At is average recorded objective progress on exit, not accuracy or time played. Missing progress is excluded; 100% does not imply a pass. Older versions recorded a fixed 0%, so periods containing those records are not reliable for this metric.</p>
+      <p class="table-scroll-hint">Scroll each table sideways to see all columns. With a keyboard, focus the table and use the left/right arrow keys.</p>
+      <div id="perIsland"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Star Distribution</h2>
+      <p class="panel-sub">How many rounds ended with 0, 1, 2 or 3 stars, per game, grouped by island. Rounds without recorded stars are counted separately. Every game is listed, including those with no recorded finishes.</p>
+      <p class="muted">Per ended attempt, not per learner or best result. Unrecorded stars are excluded from the average; zero stars are included. Stars do not determine pass/fail.</p>
+      <div class="stars-grid" id="starsGrid"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Activity Codes</h2>
+      <p class="panel-sub">Offline activities whose activity code was typed into the game in the lighthouse postbox, for the selected period and game language. These are separate from the Play Code used to restore game progress. Only the activity name from your activity list is recorded.</p>
+      <div id="phygitalList"></div>
+    </div>
+
+    <div class="panel actions-panel">
+      <h2>Actions</h2>
+      <p class="panel-sub">Export recorded events as CSV or this summary as an A4 PDF. CSV contains event rows, not one row per child. Rows marked filtered follow the selected period and language. A one-language CSV also includes visit_context rows for the selected visits: their start, end and character-choice events may be outside that period or language. Use only filtered rows for activity counts within your selection.</p>
+      <div class="actions">
+        <button class="btn" id="btnExport">Export CSV</button>
+        <button class="btn" id="btnPdf">Export PDF</button>
+      </div>
+      <p id="exportError" class="err" role="alert" hidden>Could not export the CSV. Please try again.</p>
+    </div>
+
+  </section>
+
+</main>
+<footer>
+  <p>Data collection: <a href="/panel/data-collection-en.html" lang="en">English</a> · <a href="/panel/data-collection-el.html" lang="el">Ελληνικά</a></p>
+  PLAYFOOD · ENCHATTED P.C. · EU Grant Agreement No. 101196354 🇪🇺 · Seen by staff only, never by children.
+</footer>
+
+<script type="module">
+import { plural, countLabel } from '/panel/countLabels.js';
+import { mountCalendar } from '/panel/calendar.js';
+import { collectionStatus } from '/panel/collectionStatus.js';
+import { installTimingPrint } from '/panel/timingPrint.js';
+(function(){
+  'use strict';
+
+  // Tab-scoped storage survives refresh; the server enforces idle expiry.
+  let token = null;
+  const SESSION_KEY = 'playfood-panel-session';
+  const IDLE_MS = 30 * 60 * 1000;
+  let lastActivity = 0;
+  let lastKeepAlive = 0;
+  let sessionEmail = '';
+  function rememberSession(){
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ token, email: sessionEmail, lastActivity })); } catch { /* Storage may be unavailable. */ }
+  }
+  function clearSession(){
+    token = null;
+    try { sessionStorage.removeItem(SESSION_KEY); } catch { /* Storage may be unavailable. */ }
+    $('whoami').style.display = 'none';
+    $('password').value = '';
+    show('login');
+  }
+  function expireIfIdle(){
+    if (!token || Date.now() - lastActivity < IDLE_MS) return false;
+    const expiredToken = token;
+    clearSession();
+    $('loginError').textContent = 'Your session expired after 30 minutes of inactivity. Please sign in again.';
+    $('loginError').hidden = false;
+    fetch('/api/logout', { method:'POST', headers:{ Authorization:'Bearer ' + expiredToken } }).catch(() => {});
+    return true;
+  }
+  setInterval(expireIfIdle, 1000);
+  for (const eventName of ['pointerdown', 'keydown', 'scroll', 'pointermove']) {
+    document.addEventListener(eventName, event => {
+      if (!event.isTrusted || !token || expireIfIdle() || document.hidden) return;
+      lastActivity = Date.now();
+      rememberSession();
+      if (Date.now() - lastKeepAlive > 15000) {
+        lastKeepAlive = Date.now();
+        authedFetch('/api/session').catch(() => {});
+      }
+    }, { passive:true, capture:true });
+  }
+  document.addEventListener('visibilitychange', expireIfIdle);
+
+  const $ = (id) => document.getElementById(id);
+
+  function show(id){
+    document.querySelectorAll('.screen').forEach((el) => { el.hidden = (el.id !== id); });
+  }
+
+  function fmt(n){ return Number(n || 0).toLocaleString('en-US'); }
+
+  function fmtTime(totalSeconds){
+    const s = Math.max(0, Math.round(totalSeconds || 0));
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return m ? m + ' min ' + rem + ' s' : rem + ' s';
+  }
+
+  function spaceGameName(name){
+    // Purely cosmetic: splits the camelCase event identifier for reading
+    // (e.g. "SoilDoctor" -> "Soil Doctor"). The identifier itself is untouched.
+    return String(name || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+  }
+
+  // ── bootstrap: health check decides which of the three screens we land on ──
+  async function bootstrap(){
+    const health = await fetch('/api/health').then((r) => r.json()).catch(() => null);
+    if (!health) { show('noServer'); return; }
+    if (!health.tracking) { show('disabled'); return; }
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      if (saved && typeof saved.token === 'string' && Number.isFinite(saved.lastActivity)) {
+        token = saved.token;
+        lastActivity = saved.lastActivity;
+        if (expireIfIdle()) return;
+        const res = await authedFetch('/api/session');
+        if (res.ok) {
+          sessionEmail = (await res.json()).email;
+          lastActivity = Date.now();
+          lastKeepAlive = lastActivity;
+          rememberSession();
+          $('whoamiEmail').textContent = sessionEmail;
+          $('whoami').style.display = 'flex';
+          show('dashboard');
+          setPreset('all');
+          return;
+        }
+      }
+    } catch { /* Fall back to sign-in if restoration is unavailable. */ }
+    clearSession();
+    show('login');
+  }
+
+  $('retryNoServer').addEventListener('click', bootstrap);
+  $('retryDisabled').addEventListener('click', bootstrap);
+
+  // ── sign in ──
+  async function signIn(){
+    const email = $('email').value.trim();
+    const password = $('password').value;
+    $('loginError').hidden = true;
+    $('loginError').textContent = 'Wrong email or password.';
+    $('signin').disabled = true;
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        if (res.status === 429) {
+          $('loginError').textContent = 'Too many sign-in attempts. Please try again in a few minutes.';
+        }
+        $('loginError').hidden = false;
+        return;
+      }
+      const data = await res.json();
+      token = data.token;
+      sessionEmail = email;
+      lastActivity = Date.now();
+      lastKeepAlive = lastActivity;
+      rememberSession();
+      $('password').value = '';
+      $('whoami').style.display = 'flex';
+      $('whoamiEmail').textContent = email;
+      show('dashboard');
+      setPreset('all');
+    } catch {
+      $('loginError').hidden = false;
+    } finally {
+      $('signin').disabled = false;
+    }
+  }
+  $('signin').addEventListener('click', signIn);
+  $('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') signIn(); });
+  $('email').addEventListener('keydown', (e) => { if (e.key === 'Enter') signIn(); });
+
+  $('signout').addEventListener('click', async () => {
+    const t = token;
+    clearSession();
+    $('loginError').hidden = true;
+    $('whoami').style.display = 'none';
+    $('email').value = '';
+    show('login');
+    if (t) {
+      try { await fetch('/api/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + t } }); }
+      catch { /* best-effort — the token is discarded locally either way */ }
+    }
+  });
+
+  async function authedFetch(url, opts){
+    if (expireIfIdle() || !token) return new Response(null, { status:401 });
+    const res = await fetch(url, {
+      ...opts,
+      headers: { ...(opts && opts.headers), Authorization: 'Bearer ' + token },
+    });
+    if (res.status === 401) {
+      // The session expired (or was revoked) between page loads — the safest
+      // move on a shared machine is to drop back to the sign-in screen.
+      clearSession();
+      $('loginError').textContent = 'Your session has ended. Please sign in again.';
+      $('loginError').hidden = false;
+      $('whoami').style.display = 'none';
+      show('login');
+    }
+    return res;
+  }
+
+  // ── date filters ──
+  const pad = (n) => String(n).padStart(2, '0');
+  const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const daysAgo = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d; };
+  const calendar = mountCalendar($('fromDate'), $('toDate'));
+
+  function setActivePreset(name){
+    document.querySelectorAll('.presets button').forEach((b) => {
+      b.classList.toggle('active', b.dataset.preset === name);
+    });
+  }
+
+  function setPreset(name){
+    if (name === 'today') { $('fromDate').value = toISO(new Date()); $('toDate').value = toISO(new Date()); }
+    else if (name === '7d') { $('fromDate').value = toISO(daysAgo(6)); $('toDate').value = toISO(new Date()); }
+    else if (name === '30d') { $('fromDate').value = toISO(daysAgo(29)); $('toDate').value = toISO(new Date()); }
+    else { $('fromDate').value = ''; $('toDate').value = ''; } // all time
+    setActivePreset(name);
+    calendar.sync();
+    loadStats();
+  }
+
+  document.querySelectorAll('.presets button').forEach((b) => {
+    b.addEventListener('click', () => setPreset(b.dataset.preset));
+  });
+  $('fromDate').addEventListener('change', () => { calendar.sync(); setActivePreset(null); loadStats(); });
+  $('toDate').addEventListener('change', () => { calendar.sync(); setActivePreset(null); loadStats(); });
+
+  // ── render ──
+  function renderOverview(o){
+    $('cGameProfiles').textContent = fmt(o.gameProfiles);
+    // r2 P1: the headline is missions passed, counted once per profile and game; rounds stay in the sub-line.
+    $('cFinished').textContent = fmt(o.missionsCompleted);
+    $('cFinishedLabel').textContent = plural(o.missionsCompleted, 'Mission Completed', 'Missions Completed');
+    const outcomes = o.outcomes || {};
+    $('cOutcomes').textContent = 'Each game counts once per browser profile. Rounds, replays included: '
+      + fmt(o.gamesFinished) + ' ended (' + fmt(outcomes.passed) + ' passed, ' + fmt(outcomes.failed)
+      + ' not passed, ' + fmt(outcomes.unknown) + ' unknown), ' + fmt(o.abandoned) + ' left unfinished.';
+    $('cFinished12').textContent = fmt(o.finished12);
+  }
+
+  // Κείμενα του «i» του χωνιού, γραμμένα για κάποιον που δεν έχει ξαναδεί χωνί.
+  // ΚΛΕΙΔΙ = το ακριβές `step` string που στέλνει ο server (server/src/stats.js →
+  // steps[]). Αν ένα βήμα μετονομαστεί εκεί χωρίς να ενημερωθεί εδώ, το «i» απλώς
+  // δεν εμφανίζεται για εκείνο το βήμα — καμία κατάρρευση, αλλά οι δύο λίστες
+  // πρέπει να μένουν συγχρονισμένες.
+  const FUNNEL_NOTES = {
+    'Opened a game':
+      'Profiles with a game start, finish or quit recorded in this selection. A finish or quit also proves entry when its start was not recorded. Every percentage below is a share of this number.',
+    'Finished a game':
+      'Profiles with at least one round ended in this period, whether passed or failed. This is not a successful-completion count.',
+    'Finished an island':
+      'Profiles with confirmed passes for all three distinct games on at least one island within this period. Failed and unknown outcomes do not count.',
+    'Reached 12/12':
+      'Profiles with confirmed passes for all twelve distinct games across the four islands within this period. This is not lifetime progress or a verified count of individual children.',
+  };
+
+  let funnelNoteSeq = 0;
+
+  function renderFunnel(steps, gameProfiles){
+    const el = $('funnel');
+    el.innerHTML = '';
+    funnelNoteSeq = 0;
+    // Legacy API steps and their all-activity denominator remain available to exporters.
+    const participation = [
+      { step: 'Opened a game', count: gameProfiles },
+      ...(steps || []).filter(s => ['Finished a game', 'Finished an island', 'Reached 12/12'].includes(s.step)),
+    ];
+    participation.forEach((s) => {
+      // Number() coercion, όπως κάθε άλλο render: το pct μπαίνει σε style μέσω
+      // innerHTML, οπότε αν ποτέ ερχόταν ως string (bug server/μελλοντικό πεδίο)
+      // θα ήταν σημείο διαφυγής markup. Κρατάμε το ίδιο pattern με τα υπόλοιπα.
+      const hasRate = gameProfiles > 0;
+      const pct = hasRate ? Math.round(Number(s.count) / gameProfiles * 1000) / 10 : 0;
+      const note = FUNNEL_NOTES[s.step];
+
+      const wrap = document.createElement('div');
+      wrap.className = 'funnel-step';
+
+      const row = document.createElement('div');
+      row.className = 'funnel-row';
+      row.innerHTML =
+        '<div class="funnel-label"><span></span></div>' +
+        '<div class="funnel-track"><div class="funnel-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="funnel-value"></div>';
+      row.querySelector('.funnel-label span').textContent = s.step;
+      row.querySelector('.funnel-value').textContent = fmt(s.count) + ' · ' + (hasRate ? pct + '%' : '—');
+      wrap.appendChild(row);
+
+      if (note) {
+        const id = 'funnelNote' + (++funnelNoteSeq);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'infobtn';
+        btn.textContent = 'i';
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-controls', id);
+        btn.setAttribute('aria-label', 'What does "' + s.step + '" mean?');
+
+        const noteEl = document.createElement('p');
+        noteEl.className = 'funnel-note';
+        noteEl.id = id;
+        noteEl.hidden = true;
+        noteEl.textContent = note;
+
+        btn.addEventListener('click', () => {
+          const open = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+          noteEl.hidden = open;
+        });
+
+        row.querySelector('.funnel-label').appendChild(btn);
+        wrap.appendChild(noteEl);
+      }
+
+      el.appendChild(wrap);
+    });
+  }
+
+  // Κοινή οριζόντια μπάρα. Το πλάτος είναι σχετικό με το ΜΕΓΑΛΥΤΕΡΟ νούμερο της
+  // ομάδας (όχι με το άθροισμα), ώστε μια ομάδα με ένα μόνο μη-μηδενικό στοιχείο
+  // να μην εμφανίζεται σχεδόν άδεια.
+  function renderBars(containerId, rows){
+    const el = $(containerId);
+    el.innerHTML = '';
+    const max = Math.max(1, ...rows.map((r) => Number(r.count) || 0));
+    rows.forEach((r) => {
+      const count = Number(r.count) || 0;
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML =
+        '<div class="bar-label"></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round((count / max) * 100) + '%"></div></div>' +
+        '<div class="bar-value"></div>';
+      row.querySelector('.bar-label').textContent = r.label;
+      row.querySelector('.bar-value').textContent = fmt(count);
+      el.appendChild(row);
+    });
+  }
+
+  const LANG_NAMES = { en: 'English', el: 'Greek', nl: 'Dutch', pt: 'Portuguese' };
+
+  function renderAudience(a){
+    const aud = a || {};
+    renderBars('langBars', (aud.gameLanguages || []).map((l) => ({
+      label: LANG_NAMES[l.language] || l.language,
+      count: l.count,
+    })));
+  }
+
+  // «—» και ποτέ «0» όταν ο server στέλνει null: το null σημαίνει «δεν έχουμε
+  // μέτρηση», που είναι διαφορετικό από μετρημένο μηδέν. Ένα «0%» θα διαβαζόταν
+  // ως «κανένα παιδί δεν τα κατάφερε» και θα παραπλανούσε.
+  function dash(v, fn){
+    return (v === null || v === undefined) ? '—' : fn(v);
+  }
+
+  // Τα ονόματα που βλέπει το ίδιο το παιδί στον χάρτη (client/src/i18n/locales/
+  // en.json → islands.*.name), όχι τα εσωτερικά κλειδιά. Ο δάσκαλος αναγνωρίζει
+  // «The Magic Garden Island» — το «growing» δεν του λέει τίποτα.
+  const ISLAND_NAMES = {
+    growing: 'The Magic Garden Island',
+    local: 'The Island of Seasons',
+    foodwaste: 'The Green Rescue Island',
+    circular: 'Earth Protectors Island',
+  };
+
+  const PER_GAME_COLS = ['Game', 'Started', 'Rounds ended', 'Matched rate', 'Unpaired finishes', 'Avg ⭐', 'Avg Score', 'Avg Elapsed', 'Quit At', 'Avg Time Split'];
+
+  function renderPerIsland(islands){
+    const host = $('perIsland');
+    host.innerHTML = '';
+
+    // Ανθρώπινη μονάδα, όχι «M:SS»: το άθροισμα ενός νησιού είναι δεκάδες ώρες
+    // σε μια τάξη και το fmtTime θα έδειχνε «1920:00». Ώρες με ένα δεκαδικό
+    // πάνω από την ώρα, στρογγυλά λεπτά κάτω από αυτήν.
+    const fmtSpan = (totalSeconds) => {
+      const s = Math.max(0, Math.round(totalSeconds));
+      if (s < 60) return 'under a minute';
+      if (s < 3600) {
+        const m = Math.round(s / 60);
+        return m + (m === 1 ? ' minute' : ' minutes');
+      }
+      return (s / 3600).toLocaleString('en-US',
+        { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' hours';
+    };
+
+    (islands || []).forEach((isl, i) => {
+      const block = document.createElement('div');
+      block.className = 'island-block';
+
+      const head = document.createElement('div');
+      head.className = 'island-head';
+      const num = document.createElement('span');
+      num.className = 'island-num';
+      num.textContent = 'Island ' + (i + 1);
+      const name = document.createElement('span');
+      name.className = 'island-name';
+      name.textContent = ISLAND_NAMES[isl.island] || isl.island;
+      // Τα δύο πρώτα ΧΩΡΙΣ dash(): εκεί το μηδέν είναι μετρημένο γεγονός («δεν
+      // πάτησε κανείς αυτό το νησί»), όχι απουσία μέτρησης — και είναι από τα
+      // πιο χρήσιμα πράγματα που μπορεί να δει ο δάσκαλος. Τα τρία παράγωγα
+      // περνούν ΟΛΑ από dash(): εκεί το null σημαίνει «δεν έχουμε μέτρηση» και
+      // ένα «0%» ή «0.0» θα ήταν ισχυρισμός.
+      //
+      // Το ποσοστό στρογγυλεύεται σε ακέραιο ενώ ο server στέλνει δέκατα: ο
+      // παρονομαστής είναι παιδιά, οπότε σε μια τάξη των 25 ένα παιδί αξίζει 4
+      // ποσοστιαίες μονάδες — το δέκατο θα ήταν ψεύτικη ακρίβεια σε μια γραμμή
+      // που ούτως ή άλλως διαβάζεται με μια ματιά.
+      const facts = document.createElement('span');
+      facts.className = 'island-facts';
+      [
+        countLabel(isl.entered, 'browser profile') + ' recorded here',
+        'Confirmed all three passed: ' + fmt(isl.finishedAll3),
+        'Confirmed completion rate: ' + dash(isl.completionPct, (v) => Math.round(v) + '%'),
+        'Average stars: ' + dash(isl.avgStars, (v) => v.toLocaleString('en-US',
+          { minimumFractionDigits: 1, maximumFractionDigits: 1 }))
+          + ' (' + countLabel(isl.starsMeasured, 'measured round') + ')',
+        'Elapsed time in ended rounds: ' + dash(isl.totalSeconds, fmtSpan)
+          + ' (' + countLabel(isl.timedFinishes, 'timed round') + ')',
+      ].forEach((text) => {
+        const item = document.createElement('span');
+        item.textContent = text;
+        facts.appendChild(item);
+      });
+      head.append(num, name, facts);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'table-wrap';
+      wrap.tabIndex = 0;
+      wrap.setAttribute('role', 'region');
+      wrap.setAttribute('aria-label', (ISLAND_NAMES[isl.island] || isl.island) + ' game statistics, scroll horizontally for all columns');
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      PER_GAME_COLS.forEach((label, ci) => {
+        const th = document.createElement('th');
+        if (ci > 0) th.className = 'num';
+        th.textContent = label;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+
+      const tbody = document.createElement('tbody');
+      (isl.games || []).forEach((r) => {
+        const tr = document.createElement('tr');
+        [
+          spaceGameName(r.game),
+          fmt(r.started),
+          fmt(r.finished),
+          dash(r.pct, (v) => v + '% (' + fmt(r.matchedFinished) + '/' + fmt(r.trackedStarted) + ')'),
+          fmt(r.unpairedFinishes),
+          dash(r.avgStars, (v) => v.toLocaleString('en-US', { maximumFractionDigits: 1 })),
+          dash(r.avgScore, (v) => fmt(v)),
+          dash(r.avgSeconds, fmtTime),
+          dash(r.avgQuitProgress, (v) => v + '%'),
+          '',
+        ].forEach((value, ci) => {
+          const td = document.createElement('td');
+          if (ci > 0) td.className = 'num';
+          td.textContent = value;
+          if (ci === 2) {
+            const breakdown = document.createElement('div');
+            breakdown.className = 'outcome-breakdown';
+            breakdown.textContent = fmt(r.outcomes?.passed) + ' passed · '
+              + fmt(r.outcomes?.failed) + ' failed · ' + fmt(r.outcomes?.unknown) + ' unknown';
+            td.appendChild(breakdown);
+          }
+          if (ci === 5 || ci === 6) {
+            const sample = document.createElement('div');
+            sample.className = 'outcome-breakdown';
+            const measured = ci === 5 ? r.starsMeasured : r.scoresMeasured;
+            sample.textContent = fmt(measured) + ' of ' + countLabel(r.finished, 'round') + ' measured';
+            sample.title = 'Each recorded ended attempt counts once. Missing values are excluded; zero values are included.';
+            td.appendChild(sample);
+          }
+          if (ci === 7) {
+            const sample = document.createElement('div');
+            sample.className = 'outcome-breakdown';
+            sample.textContent = fmt(r.timedFinishes) + ' of ' + countLabel(r.finished, 'round') + ' timed';
+            td.appendChild(sample);
+          }
+          if (ci === 9) {
+            td.className = '';
+            td.style.minWidth = '170px';
+            const timing = r.timing;
+            if (!timing?.measured) td.textContent = 'No measured split.';
+            else {
+              const details = document.createElement('details');
+              details.dataset.timingSplit = '';
+              const summary = document.createElement('summary');
+              summary.textContent = countLabel(timing.measured, 'measured round');
+              details.appendChild(summary);
+              for (const [key, label] of [['active_s', 'Play'], ['learning_s', 'Guidance'], ['paused_s', 'Pause'], ['hidden_s', 'Away'], ['idle_s', 'Possible idle'], ['other_s', 'Other']]) {
+                const line = document.createElement('div');
+                line.textContent = label + ': ' + dash(timing[key], fmtTime);
+                details.appendChild(line);
+              }
+              td.appendChild(details);
+            }
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      table.append(thead, tbody);
+      wrap.appendChild(table);
+      block.append(head, wrap);
+      host.appendChild(block);
+    });
+  }
+
+  // Ο server στέλνει τα αστέρια ΕΠΙΠΕΔΑ (δώδεκα γραμμές, μία ανά παιχνίδι) χωρίς
+  // να λέει σε ποιο νησί ανήκει η καθεμία. Το perIsland όμως το λέει ήδη, οπότε
+  // η ομαδοποίηση διαβάζεται από εκεί αντί να κοπεί ο πίνακας σε τριάδες: αν
+  // αλλάξει η σειρά ή το πλήθος των παιχνιδιών στον server, οι σειρές εδώ
+  // παραμένουν σωστές. Και τα ονόματα βγαίνουν από το ίδιο ISLAND_NAMES με το
+  // «Per Game», άρα οι δύο ενότητες διαβάζονται ολόιδια.
+  function renderPhygital(rows){
+    const list = $('phygitalList');
+    list.replaceChildren();
+    if (!rows.length) {
+      const p = document.createElement('p'); p.className = 'muted';
+      p.textContent = 'No activity code was redeemed in this period.';
+      list.append(p);
+      return;
+    }
+    for (const row of rows) {
+      const p = document.createElement('p');
+      p.textContent = row.activity + ': ' + countLabel(row.redemptions, 'redemption') + ' by '
+        + countLabel(row.profiles, 'browser profile') + '.';
+      list.append(p);
+    }
+  }
+
+  function renderStars(rows, islands){
+    const grid = $('starsGrid');
+    grid.innerHTML = '';
+    const byGame = new Map((rows || []).map((r) => [r.game, r]));
+
+    const bar = (n, cls, count, max) =>
+      '<div class="star-row">' +
+      '<div class="star-label">' + n + '<span class="star-glyph">★</span></div>' +
+      '<div class="star-track"><div class="star-fill ' + cls + '" style="width:' +
+      Math.round((count / max) * 100) + '%"></div></div>' +
+      '<div class="star-count">' + fmt(count) + '</div></div>';
+
+    // Το όνομα του παιχνιδιού έρχεται από τη βάση, οπότε μπαίνει με textContent
+    // και ποτέ μέσα στο innerHTML.
+    function card(game){
+      const r = byGame.get(game) || {};
+      const s0 = r.s0 || 0, s1 = r.s1 || 0, s2 = r.s2 || 0, s3 = r.s3 || 0;
+      const unknown = r.unknown || 0;
+      const max = Math.max(s0, s1, s2, s3, 1);
+      const el = document.createElement('div');
+      el.className = 'star-card';
+      el.innerHTML = '<h3></h3>'
+        + bar(0, 's0', s0, max) + bar(1, 's1', s1, max) + bar(2, 's2', s2, max) + bar(3, 's3', s3, max)
+        + '<p class="muted">' + countLabel(s0 + s1 + s2 + s3 + unknown, 'round ended', 'rounds ended')
+        + ' · Stars not recorded: ' + fmt(unknown) + '</p>';
+      el.querySelector('h3').textContent = spaceGameName(game);
+      return el;
+    }
+
+    function block(num, name, games){
+      const wrap = document.createElement('div');
+      wrap.className = 'stars-island';
+      const head = document.createElement('div');
+      head.className = 'stars-island-head';
+      if (num) {
+        const numEl = document.createElement('span');
+        numEl.className = 'stars-island-num';
+        numEl.textContent = num;
+        head.appendChild(numEl);
+      }
+      const nameEl = document.createElement('span');
+      nameEl.className = 'stars-island-name';
+      nameEl.textContent = name;
+      head.appendChild(nameEl);
+      const row = document.createElement('div');
+      row.className = 'stars-island-games';
+      games.forEach((g) => row.appendChild(card(g)));
+      wrap.append(head, row);
+      grid.appendChild(wrap);
+    }
+
+    const grouped = new Set();
+    (islands || []).forEach((isl, i) => {
+      const games = (isl.games || []).map((g) => g.game);
+      games.forEach((g) => grouped.add(g));
+      block('Island ' + (i + 1), ISLAND_NAMES[isl.island] || isl.island, games);
+    });
+
+    // Δίχτυ ασφαλείας: αν ο server στείλει παιχνίδι που δεν ανήκει σε κανένα από
+    // τα νησιά, δεν εξαφανίζεται σιωπηλά — φαίνεται σε δικό του μπλοκ στο τέλος.
+    const orphans = (rows || []).map((r) => r.game).filter((g) => !grouped.has(g));
+    if (orphans.length) block('', 'Historical games outside the current catalogue', orphans);
+  }
+
+  // Γεμίζει από ΜΙΑ κλήση (/api/stats → now). Ό,τι δείχνει εδώ αφορά το «τώρα»
+  // και δεν ακολουθεί το φίλτρο περιόδου — γι' αυτό ζει πάνω από το φίλτρο.
+  function renderNow(now){
+    const n = now || {};
+    $('nowText').textContent =
+      'Server totals (all languages) · Database ' + (n.db ? 'OK' : 'unavailable') + ' · ' +
+      'Recording ' + (n.tracking ? 'on' : 'off') + ' · ' +
+      countLabel(n.eventsToday, 'event') + ' today';
+    const status = collectionStatus(n.collection);
+    $('collectionStatus').textContent = status.text;
+  }
+
+  function selectedPeriodQuery(){
+    return new URLSearchParams({ from: $('fromDate').value || '', to: $('toDate').value || '', language: selectedLanguage() }).toString();
+  }
+
+  const languageNames = { '': 'All languages', ...LANG_NAMES };
+  function selectedLanguage(){ return document.querySelector('input[name="gameLanguage"]:checked').value; }
+  function explainLanguage(){
+    const language = selectedLanguage();
+    $('languageExplanation').textContent = (language
+      ? 'Showing activity recorded in ' + languageNames[language] + ' during the selected period. '
+      : 'Showing recorded activity across all game languages during the selected period. ')
+      + 'Language, not location. Language bars count each game profile once per language with recorded game activity; a profile using multiple languages can appear in more than one total. CSV exports retain all selected event types, including activity before a game opens. Their row_scope column distinguishes filtered activity from visit_context start, end and character-choice rows, which can have another or no language or fall outside the selected period.';
+  }
+  document.querySelectorAll('input[name="gameLanguage"]').forEach(input => {
+    input.addEventListener('change', () => { explainLanguage(); setPrintPeriod(); loadStats(); });
+  });
+  explainLanguage();
+  let statsRequest = 0;
+  async function loadStats(){
+    const request = ++statsRequest;
+    $('filterStatus').hidden = false;
+    $('filterStatus').textContent = 'Loading selected statistics…';
+    $('btnExport').disabled = true;
+    $('btnPdf').disabled = true;
+    try {
+    const res = await authedFetch('/api/stats?' + selectedPeriodQuery());
+    if (!res.ok) throw new Error('Statistics unavailable');
+    const data = await res.json();
+    if (request !== statsRequest) return;
+    $('dashboard').classList.remove('stale');
+    renderNow(data.now || {});
+    // Do not silently substitute landing-page profiles if an older backend is still installed.
+    if (!Number.isInteger(data.overview?.gameProfiles) || !Array.isArray(data.audience?.gameLanguages)) {
+      throw new Error('Game participation statistics are unavailable');
+    }
+    renderOverview(data.overview);
+    renderFunnel(data.funnel || [], data.overview.gameProfiles);
+    renderPerIsland(data.perIsland || []);
+    renderStars(data.stars || [], data.perIsland || []);
+    renderPhygital(data.phygital || []);
+    renderAudience(data.audience || {});
+    $('filterStatus').hidden = data.overview.gameProfiles > 0;
+    $('filterStatus').textContent = 'No recorded game activity for this language and period. Activity-code totals and CSV exports may still contain other events.';
+    $('btnExport').disabled = false;
+    $('btnPdf').disabled = false;
+    } catch {
+      if (request !== statsRequest) return;
+      $('dashboard').classList.add('stale');
+      $('filterStatus').textContent = 'Could not load the selected statistics, so the figures are hidden. Select a filter again to retry.';
+    }
+  }
+
+  // ── download: το CSV θέλει το bearer token, οπότε κατεβάζουμε εμείς το αρχείο
+  // και ενεργοποιούμε την αποθήκευση από την απάντηση, αντί για σκέτο <a href> ──
+  async function downloadFrom(url, fallbackName){
+    $('exportError').hidden = true;
+    try {
+      const res = await authedFetch(url);
+      if (res.status === 401) return;
+      if (!res.ok) throw new Error('Export unavailable');
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = /filename="([^"]+)"/.exec(disposition);
+      const name = match ? match[1] : fallbackName;
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      if (token) $('exportError').hidden = false;
+    }
+  }
+
+  $('btnExport').addEventListener('click', () => downloadFrom('/api/export.csv?' + selectedPeriodQuery(), 'playfood-stats.csv'));
+
+  // ── Export PDF ────────────────────────────────────────────────────────────
+  // Το print stylesheet ορίζει την εμφάνιση και τα time splits ανοίγουν μόνο
+  // όσο διαρκεί η εκτύπωση. Τα κουμπιά περιόδου και οι
+  // ημερομηνίες κρύβονται στην εκτύπωση, οπότε αν δεν γραφτεί η περίοδος ως
+  // κείμενο, το PDF δεν λέει πουθενά τι διάστημα καλύπτουν οι αριθμοί.
+  function periodText(){
+    const from = $('fromDate').value;
+    const to = $('toDate').value;
+    if (!from && !to) return 'All time; every day recorded so far.';
+    if (from && to) {
+      return from === to
+        ? ('A single day: ' + from + '.')
+        : ('From ' + from + ' to ' + to + ', inclusive.');
+    }
+    return from ? ('From ' + from + ' onwards.') : ('Up to and including ' + to + '.');
+  }
+
+  function setPrintPeriod(){
+    $('printPeriod').textContent = periodText() + ' Game language: ' + languageNames[selectedLanguage()] + '.';
+    // Same YYYY-MM-DD form as the period above, in local time.
+    $('printGenerated').textContent = 'Generated on ' + new Date().toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }) + '.';
+  }
+
+  // Delegation πάνω στη μπάρα φίλτρων: πιάνει και τα preset κουμπιά και τα δύο
+  // πεδία ημερομηνίας με έναν listener, χωρίς να πειράξει τον κώδικα φίλτρων.
+  const filterbar = document.querySelector('.filterbar');
+  if (filterbar) {
+    filterbar.addEventListener('click', setPrintPeriod);
+    filterbar.addEventListener('change', setPrintPeriod);
+  }
+  // Δίχτυ ασφαλείας για Ctrl+P ή «Print» από το μενού του browser, που δεν
+  // περνούν από το κουμπί μας.
+  installTimingPrint($('perIsland'), window, setPrintPeriod);
+
+  $('btnPdf').addEventListener('click', () => {
+    setPrintPeriod();
+    // Το «Save as PDF» του διαλόγου εκτύπωσης δίνει A4 αρχείο χωρίς καμία
+    // βιβλιοθήκη: η σελίδα μένει αυτοτελής και δουλεύει και offline.
+    window.print();
+  });
+
+  bootstrap();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+/* ============================================
+   PLAYFOOD Brand Tokens
+   Source: Playfood_Brand Guideline.pdf (Oct 2025)
+   ============================================ */
+
+:root {
+  /* Primary palette — pillars + brand */
+  --pf-orange: #E07F37;   /* Local & Seasonal Eating */
+  --pf-blue:   #235FB7;   /* Circular & Climate Change */
+  --pf-red:    #D36244;   /* Food Waste Reduction */
+  --pf-green:  #6DB06C;   /* Growing Your Own Food */
+  --pf-purple: #533F8B;   /* UI chrome / accents */
+
+  /* Secondary palette — softer tones */
+  --pf-yellow-soft:  #F7E1A4;
+  --pf-blue-soft:    #CED3F4;
+  --pf-yellow-green: #E0E07E;
+  --pf-cream:        #FBF6C9;
+  --pf-pink:         #E5BDD1;
+
+  /* Semantic */
+  --pf-bg:            var(--pf-cream);
+  --pf-text:          #1A1A1A;
+  --pf-text-on-color: #FFFFFF;
+
+  /* Gradients — backgrounds/highlights/compositions only.
+     Never apply to logos or typography. */
+  --pf-grad-orange: linear-gradient(90deg, var(--pf-orange), var(--pf-yellow-soft));
+  --pf-grad-red:    linear-gradient(90deg, var(--pf-red),    var(--pf-yellow-green));
+  --pf-grad-purple: linear-gradient(90deg, var(--pf-purple), var(--pf-pink));
+  --pf-grad-blue:   linear-gradient(90deg, var(--pf-blue),   var(--pf-blue-soft));
+  --pf-grad-green:  linear-gradient(90deg, var(--pf-green),  var(--pf-cream));
+
+  /* Typography */
+  --pf-font-head: 'IBM Plex Sans', system-ui, sans-serif;
+  --pf-font-body: 'Inter', system-ui, sans-serif;
+}
+
+/* ============================================
+   @font-face — local brand fonts
+   ============================================ */
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBMPlexSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================
+   "Fredoka" = Comfortaa.
+   The family name kept its legacy "Fredoka" refs
+   (~65 inline styles + canvas ctx.font strings)
+   but now resolves to the real child-friendly
+   rounded face: Comfortaa (variable, OFL), which
+   fully covers Greek + Latin for EL/EN/NL/PT.
+   Fredoka itself has no Greek, hence Comfortaa.
+   ============================================ */
+
+@font-face {
+  font-family: 'Fredoka';
+  src: url('/fonts/Comfortaa.ttf') format('truetype');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Keep keyboard focus visible even on controls with inline outline resets. */
+:where(button, a, input):focus-visible {
+  outline: 3px solid #533F8B !important;
+  outline-offset: 3px;
+}

@@ -1,0 +1,45 @@
+# ─────────────────────────────────────────────────────────────
+#  PLAYFOOD — Installation settings
+#  Format: one "KEY = value" per line. Lines starting with # are ignored.
+#
+#  When a change takes effect (marked on each setting below):
+#    • [live]    = re-read automatically within 30 seconds, no restart.
+#    • [restart] = restart the server for it to take effect.
+#    • [rebuild] = also rebuild the game (the value is baked into the build).
+# ─────────────────────────────────────────────────────────────
+
+# [live] Turn statistics recording and the /panel page on or off.
+# no  = nothing is recorded, and /panel plus its data API are all disabled.
+PANEL_ENABLED    = no
+
+# [rebuild] Secret phrase that accompanies every statistics submission.
+# Put your own random phrase here. The server picks up a change within 30s,
+# BUT the game only sends the phrase it was built with — so after changing
+# this you must rebuild the game with the matching VITE_PANEL_SECRET, or
+# every event is silently rejected. See the Technical Documentation (Deliverable 5).
+PANEL_SECRET     = change-this-to-your-own-phrase
+
+# [live] How many months of data we keep. Older records are deleted on the
+# next daily cleanup (runs every 24h and at startup).
+# New installations: use the supplied 24-month setting.
+# Existing installations: update this key only; preserve all other site settings.
+# Separate backups and CSV exports need their own retention management.
+RETENTION_MONTHS = 24
+
+# [restart] Time zone — decides what "today" means in the date filters.
+# Applied once at startup; restart the server after changing it.
+TIMEZONE         = Europe/Athens
+
+# [restart] Server port. Bound once at startup; restart to change.
+PORT             = 4000
+
+# [live] Safety valve: maximum records accepted per day.
+MAX_EVENTS_PER_DAY = 200000
+
+# [restart] Behind a reverse proxy such as nginx, list the proxy addresses or CIDRs
+# (comma-separated) whose forwarded headers the server may trust. Default: no.
+# TRUST_PROXY  = no
+
+# [restart] Other web origins allowed to call the API (comma-separated).
+# Leave empty when the game and the server share one address. Default: empty.
+# CORS_ORIGINS =

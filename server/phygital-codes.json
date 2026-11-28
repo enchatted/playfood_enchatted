@@ -1,0 +1,12 @@
+[
+  { "id": "SAVEIT", "code": "SAVEIT", "points": 50, "island": "foodwaste", "enabled": true,
+    "description": { "en": "Food-saving activity", "el": "Δραστηριότητα για να μη σπαταλάμε τρόφιμα", "nl": "Activiteit over voedsel besparen", "pt": "Atividade para evitar o desperdício alimentar" } },
+  { "id": "LOCALF", "code": "LOCALF", "points": 50, "island": "local", "enabled": true,
+    "description": { "en": "Local food activity", "el": "Δραστηριότητα για τα τοπικά τρόφιμα", "nl": "Activiteit over lokaal voedsel", "pt": "Atividade sobre alimentos locais" } },
+  { "id": "SEASON", "code": "SEASON", "points": 50, "island": "local", "enabled": true,
+    "description": { "en": "Seasonal food activity", "el": "Δραστηριότητα για τα τρόφιμα εποχής", "nl": "Activiteit over seizoensvoedsel", "pt": "Atividade sobre alimentos da época" } },
+  { "id": "GROWIT", "code": "GROWIT", "points": 50, "island": "growing", "enabled": true,
+    "description": { "en": "Growing food activity", "el": "Δραστηριότητα για την καλλιέργεια τροφίμων", "nl": "Activiteit over voedsel kweken", "pt": "Atividade sobre cultivar alimentos" } },
+  { "id": "COMPOS", "code": "COMPOS", "points": 50, "island": "circular", "enabled": true,
+    "description": { "en": "Composting activity", "el": "Δραστηριότητα για την κομποστοποίηση", "nl": "Activiteit over composteren", "pt": "Atividade sobre compostagem" } }
+]

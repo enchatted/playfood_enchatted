@@ -1,0 +1,430 @@
+@keyframes marketTripItemIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes marketTripFeedbackIn {
+  from { opacity: 0; transform: translate(-50%, -8px) scale(.97); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+.market-trip-scorebar button,
+.market-trip-guidance button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.market-trip-guidance {
+  flex: 0 0 52px;
+  min-height: 52px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 7px 18px;
+  border-top: 2px solid #6f4527;
+  border-bottom: 2px solid #c69d59;
+  background: linear-gradient(180deg, #fff4cf 0%, #f7e2aa 100%);
+  color: #493027;
+  font-size: clamp(14px, 1.2vw, 18px);
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.market-trip-guidance-text { max-width: 1050px; }
+
+.market-trip-guidance button {
+  flex: 0 0 auto;
+  border: 2px solid #8e6a1e;
+  border-radius: 10px;
+  padding: 7px 12px;
+  background: #ffe8a3;
+  color: #4d3528;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.market-trip-guidance.is-warning { border-color: #b73b31; background: #ffe0d7; color: #8f251e; }
+.market-trip-guidance.is-success { border-color: #5e8e48; background: #e8f4d5; color: #345f2e; }
+
+.market-trip-board { height: 100%; justify-content: flex-end; gap: 6px !important; padding: 8px !important; }
+.market-trip-canvas-stage { position: relative; padding: 4px !important; }
+
+.market-trip-feedback-popup {
+  position: absolute;
+  z-index: 4;
+  top: clamp(10px, 2.5vh, 20px);
+  left: 50%;
+  width: min(620px, calc(100% - 28px));
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border: 3px solid #4f7d3a;
+  border-radius: 12px;
+  background: #fff9e9;
+  color: #31522b;
+  box-shadow: 5px 6px 0 rgba(62, 42, 30, .30);
+  font-size: clamp(14px, 1.35vw, 18px);
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  pointer-events: none;
+  animation: marketTripFeedbackIn .18s ease-out both;
+}
+
+.market-trip-feedback-popup.is-warning {
+  border-color: #b73b31;
+  color: #8f251e;
+  background: #fff0e8;
+}
+
+.market-trip-receipt {
+  flex: 0 0 clamp(320px, 22%, 340px);
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 13px;
+  color: #3e2a1e;
+  background: linear-gradient(180deg, #fbf1db 0%, #f5e6c8 100%);
+  box-shadow: 0 8px 22px rgba(40, 22, 10, .32), inset 0 0 0 1px rgba(196, 164, 112, .55);
+}
+
+.market-trip-receipt-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  background: linear-gradient(180deg, #c8612e 0%, #b5511f 100%);
+  box-shadow: inset 0 -1px 0 rgba(80, 30, 10, .35);
+}
+
+.market-trip-receipt-icon { font-size: 18px; }
+
+.market-trip-receipt-title {
+  color: #fff3e0;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 1px rgba(80, 30, 10, .4);
+}
+
+.market-trip-receipt-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 13px 9px;
+}
+
+.market-trip-meter-track {
+  position: relative;
+  height: 8px;
+  overflow: visible;
+  border-radius: 5px;
+  background: #e7d6b4;
+  box-shadow: inset 0 1px 2px rgba(120, 90, 50, .30);
+}
+
+.market-trip-meter-fill { position: absolute; inset: 0 auto 0 0; border-radius: 5px; transition: width .25s ease, background .25s ease; }
+.market-trip-meter-star { position: absolute; top: -5px; transform: translateX(-50%); font-size: 12px; line-height: 1; filter: drop-shadow(0 0 1px #fbf1db); }
+
+.market-trip-receipt-header .market-trip-receipt-title { min-width: 0; white-space: nowrap; }
+
+/* Goals title + the market's country and month. Wraps rather than cutting. */
+.market-trip-goals-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px 6px;
+  margin-bottom: 3px;
+}
+
+.market-trip-scenario {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #f6e3c2;
+  box-shadow: inset 0 0 0 1px rgba(196, 164, 112, .6);
+  color: #6a3a18;
+  font-size: 12.5px;
+  font-weight: 900;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.market-trip-goals {
+  flex: 0 0 auto;
+  margin: 0 0 5px; /* tighter since the goal-1 note, so 8 basket rows still fit */
+  padding: 7px 10px 6px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .62);
+  box-shadow: inset 0 0 0 1px rgba(196, 164, 112, .45);
+}
+
+.market-trip-goals-title { color: #8a5a37; font-size: 13px; font-weight: 900; letter-spacing: .8px; text-transform: uppercase; white-space: nowrap; }
+.market-trip-goal-note { margin: -3px 0 3px 26px; color: #6e5235; font-size: 11px; font-weight: 700; line-height: 1.1; }
+
+.market-trip-goal {
+  display: grid;
+  grid-template-columns: 21px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  color: #3e2a1e;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.market-trip-goal + .market-trip-meter-track { margin: 1px 0 5px 26px; }
+.market-trip-goal.is-done { color: #2e6b27; }
+.market-trip-goal.is-miss { color: #a1332a; }
+.market-trip-goal.is-warn { color: #a3560f; }
+.market-trip-goal-icon { font-size: 14px; }
+.market-trip-goal-text { min-width: 0; }
+.market-trip-goal-value { flex: 0 0 auto; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.market-trip-goal-value b { color: #3e2a1e; }
+.market-trip-goal-value b.is-over { color: #c0392b; }
+.market-trip-goal-value span { color: #a98c6b; }
+
+.market-trip-items { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 2px; }
+.market-trip-empty { margin: auto 0; padding: 10px; color: #987b58; font-size: 14px; font-style: italic; line-height: 1.35; text-align: center; }
+
+.market-trip-item {
+  flex: 0 0 30px;
+  min-width: 0;
+  min-height: 30px;
+  max-height: 30px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 6px 1px 4px;
+  border-left: 4px solid #9fb3bd;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .64);
+  box-shadow: inset 0 0 0 1px rgba(196, 164, 112, .38);
+  animation: marketTripItemIn .24s ease both;
+}
+
+.market-trip-item.is-in-season { border-left-color: #4f9a45; }
+.market-trip-item.is-out-of-season { border-left-color: #e08a2e; }
+.market-trip-item.is-craft { border-left-color: #b98a3c; }
+
+.market-trip-item-emoji { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: linear-gradient(180deg, #fffcf3, #f0e2c4); font-size: 15px; }
+.market-trip-item-copy { min-width: 0; display: flex; align-items: baseline; gap: 5px; line-height: 1.15; }
+/* The product name never gets cut; if a long translation is short of room,
+   only the origin tag shortens (its full text stays in the title tooltip). */
+.market-trip-item-name { flex: 0 0 auto; max-width: 100%; min-width: 0; overflow: hidden; color: #3e2a1e; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.market-trip-item-origin { flex: 0 1 auto; min-width: 0; overflow: hidden; color: #52666f; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.market-trip-item-price { color: #b5511f; font-size: 15px; line-height: 1; font-variant-numeric: tabular-nums; }
+
+/* checkout: two columns, name over the full season tag */
+.market-trip-item.is-long { flex-basis: auto; min-height: 0; max-height: none; height: 100%; }
+.market-trip-item.is-long .market-trip-item-copy { flex-direction: column; align-items: flex-start; gap: 1px; }
+.market-trip-item.is-long .market-trip-item-origin { flex: 0 0 auto; max-width: 100%; font-size: 12.5px; }
+
+.market-trip-checkout-open {
+  flex: 0 0 auto;
+  min-height: 44px;
+  margin-top: 7px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #5ba152, #3f8a39);
+  box-shadow: 0 3px 0 #2f6b2a;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.market-trip-mentor {
+  flex: 0 0 auto;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 2px solid #78965a;
+  border-radius: 11px;
+  background: #edf5df;
+  color: #3b4c2e;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.market-trip-mentor-face { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 3px solid #fff; border-radius: 50%; background: #f2845c; font-size: 23px; box-shadow: 0 2px 6px rgba(80, 44, 25, .22); }
+
+/* ── Checkout review (over the canvas; the basket panel stays visible) ── */
+.market-trip-checkout-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(40, 22, 10, .55);
+}
+
+.market-trip-checkout {
+  width: min(680px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  box-sizing: border-box;
+  padding: clamp(10px, 1.6vw, 18px) clamp(12px, 2vw, 22px);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbf1db, #f5e6c8);
+  box-shadow: 0 20px 46px rgba(40, 22, 10, .5), inset 0 0 0 2px rgba(138, 90, 55, .5);
+  color: #3e2a1e;
+}
+
+.market-trip-checkout h2 { margin: 0 0 clamp(6px, 1vh, 10px); color: #7a3f18; font-size: clamp(19px, 2vw, 24px); text-align: center; }
+.market-trip-checkout-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: clamp(34px, 5.2vh, 42px); gap: 6px; }
+.market-trip-checkout-totals { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; margin: 9px 0 6px; padding: 7px 12px; border-radius: 10px; background: #f3e2bd; font-size: clamp(14px, 1.4vw, 16px); font-weight: 800; }
+.market-trip-checkout-goals { padding: 7px 12px; border-radius: 10px; background: rgba(255, 255, 255, .65); box-shadow: inset 0 0 0 1px rgba(196, 164, 112, .45); }
+.market-trip-checkout-goals .market-trip-goal { font-size: clamp(14px, 1.4vw, 16px); }
+.market-trip-checkout-warning { margin: 8px 0 0; padding: 8px 12px; border-radius: 10px; background: #ffe2de; color: #a62e27; font-size: clamp(14px, 1.4vw, 16px); font-weight: 800; }
+.market-trip-checkout-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 11px; }
+
+.market-trip-checkout-change,
+.market-trip-checkout-pay {
+  min-height: 44px;
+  padding: 8px 18px;
+  border-radius: 22px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.market-trip-checkout-change { border: 2px solid #c8612e; background: #fff8ec; color: #7a3f18; }
+.market-trip-checkout-pay { border: 2px solid #3f7f3a; background: linear-gradient(180deg, #6fb865, #4c9a44); color: #fff; }
+.market-trip-checkout-pay:disabled { opacity: .45; cursor: not-allowed; }
+.market-trip-checkout-hint { margin: 7px 0 0; color: #8d6e63; font-size: 13px; font-weight: 700; text-align: center; }
+
+/* Large screens: the checkout grows with the market instead of staying a
+   small card in the middle of a wide canvas. */
+@media (min-width: 1400px) and (min-height: 740px) {
+  .market-trip-checkout { width: min(860px, 100%); }
+  .market-trip-checkout h2 { font-size: 27px; }
+  .market-trip-checkout-items { grid-auto-rows: clamp(40px, 5.6vh, 52px); gap: 8px; }
+  .market-trip-checkout .market-trip-item-name { font-size: 16px; }
+  .market-trip-checkout .market-trip-item.is-long .market-trip-item-origin { font-size: 14px; }
+  .market-trip-checkout .market-trip-item-price { font-size: 17px; }
+  .market-trip-checkout .market-trip-item-emoji { width: 28px; height: 28px; font-size: 19px; }
+  .market-trip-checkout .market-trip-item { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .market-trip-checkout-totals,
+  .market-trip-checkout-goals .market-trip-goal,
+  .market-trip-checkout-warning { font-size: 18px; }
+  .market-trip-checkout-change,
+  .market-trip-checkout-pay { min-height: 50px; padding: 9px 24px; font-size: 19px; }
+  .market-trip-checkout-hint { font-size: 14px; }
+}
+
+@media (min-width: 1101px) and (max-height: 740px) {
+  .market-trip-item { flex-basis: 27px; min-height: 27px; max-height: 27px; }
+  .market-trip-goals { margin-bottom: 6px; padding-block: 5px 7px; }
+  .market-trip-goal { min-height: 22px; }
+  .market-trip-goal + .market-trip-meter-track { margin-bottom: 4px; }
+  .market-trip-mentor { min-height: 48px; margin-top: 6px; padding-block: 4px; }
+}
+
+@media (max-width: 1100px) and (orientation: landscape) {
+  .market-trip-stage-wrap { padding: 7px 9px !important; }
+  .market-trip-board { height: 100%; padding: 7px !important; }
+  .market-trip-canvas-stage { min-width: 0; padding: 3px !important; }
+  .market-trip-canvas { width: 100% !important; height: auto !important; max-height: 100%; }
+  .market-trip-receipt { flex-basis: clamp(314px, 31%, 330px); }
+  .market-trip-receipt-body { padding: 9px 10px 7px; }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .market-trip-guidance { flex-basis: 44px; min-height: 44px; padding-block: 4px; font-size: 13px; }
+  .market-trip-stage-wrap { padding-block: 4px !important; }
+  .market-trip-receipt-header { min-height: 36px; padding-block: 4px; }
+  .market-trip-receipt-title { font-size: 12px; letter-spacing: .6px; }
+  .market-trip-receipt-body { padding: 5px 7px; }
+  .market-trip-goals { margin-bottom: 4px; padding: 3px 6px 4px; }
+  /* No room for an extra row here: the country + month chip moves up into
+     the right end of the basket header (same element, no duplicate). */
+  .market-trip-receipt { position: relative; }
+  .market-trip-goals-head { position: absolute; top: 0; right: 8px; height: 36px; margin: 0; }
+  .market-trip-goals-title { display: none; }
+  .market-trip-scenario { padding: 1px 6px; font-size: 10px; line-height: 1.3; }
+  .market-trip-goal { grid-template-columns: 16px minmax(0, 1fr) auto; min-height: 16px; font-size: 10.5px; line-height: 1.1; }
+  .market-trip-goal-icon { font-size: 10px; }
+  .market-trip-goal-value { font-size: 11px; }
+  .market-trip-goal + .market-trip-meter-track { height: 5px; margin: 1px 0 3px 21px; }
+  .market-trip-goal-note { margin: 0 0 3px 21px; font-size: 10px; }
+  .market-trip-meter-star { top: -4px; font-size: 9px; }
+  .market-trip-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 3px; }
+  .market-trip-item { min-height: 0; max-height: none; grid-template-columns: 18px minmax(0, 1fr) auto; padding: 1px 4px; gap: 3px; }
+  .market-trip-empty { grid-column: 1 / -1; grid-row: 1 / -1; padding: 4px 8px; font-size: 12px; line-height: 1.25; }
+  .market-trip-item-emoji { width: 18px; height: 18px; font-size: 12px; }
+  .market-trip-item-name { font-size: 10.5px; }
+  .market-trip-item-origin { display: none; }
+  .market-trip-item-price { font-size: 10.5px; }
+  .market-trip-checkout-open { min-height: 34px; margin-top: 4px; padding: 3px; font-size: 13px; }
+  .market-trip-mentor { min-height: 32px; grid-template-columns: 26px 1fr; margin-top: 4px; padding: 2px 6px; font-size: 10px; }
+  .market-trip-mentor-face { width: 24px; height: 24px; border-width: 2px; font-size: 15px; }
+  /* Short landscape (phones): the basket list beside the checkout already
+     shows the eight products, so the review keeps totals, goals and buttons. */
+  .market-trip-checkout-backdrop { padding: 5px; }
+  .market-trip-checkout { padding: 8px 12px; }
+  .market-trip-checkout h2 { margin-bottom: 4px; font-size: 16px; }
+  .market-trip-checkout-items { display: none; }
+  .market-trip-checkout-totals { margin: 0 0 4px; padding: 4px 10px; font-size: 12px; }
+  .market-trip-checkout-goals { padding: 3px 10px; }
+  .market-trip-checkout-goals .market-trip-goal { min-height: 18px; grid-template-columns: 18px minmax(0, 1fr) auto; font-size: 12px; }
+  .market-trip-checkout-warning { margin-top: 4px; padding: 4px 10px; font-size: 12px; }
+  .market-trip-checkout-actions { gap: 10px; margin-top: 6px; }
+  .market-trip-checkout-change,
+  .market-trip-checkout-pay { min-height: 38px; padding: 5px 14px; font-size: 14px; }
+  .market-trip-checkout-hint { margin-top: 4px; font-size: 11px; }
+}
+
+
+/* Instructions and purchase cards use the full stage while the outer board
+   and side basket retain their normal footprint. */
+.market-trip.intro-open .market-trip-canvas-stage,
+.market-trip.choice-open .market-trip-canvas-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.market-trip-board { position: relative; }
+.market-trip.intro-open .market-trip-canvas,
+.market-trip.choice-open .market-trip-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100%;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .market-trip.intro-open .market-trip-receipt { visibility: hidden; }
+}
+/* The compact purchase card has its own ✕ and is bought with one tap, so the
+   «tap a card · B: back» ribbon (B is hidden) gives its height to the card. */
+.market-trip.choice-compact .market-trip-guidance { display: none; }

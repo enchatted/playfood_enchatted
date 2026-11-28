@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Local deliverables
+/deliverables/
+
+# Local working notes
+/docs/
+/september/
+/presentation-assets/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Playwright test run artifacts (e2e specs live in client/e2e/)
+client/test-results/
+client/playwright-report/
+client/blob-report/
+client/.last-run.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local databases
+server/playfood.db
+server/playfood.db-*

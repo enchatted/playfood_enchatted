@@ -1,0 +1,20 @@
+{
+  "name": "playfood-server",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "NODE_ENV=test node --test"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@fastify/static": "^10.1.0",
+    "better-sqlite3": "^12.11.1",
+    "fastify": "^5.12.7"
+  }
+}

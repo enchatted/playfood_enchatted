@@ -1,0 +1,11 @@
+Options -Indexes
+
+<IfModule mod_headers.c>
+    Header onsuccess unset X-Powered-By
+    Header always unset X-Powered-By
+
+    <Files "index.html">
+        Header onsuccess unset Cache-Control
+        Header always set Cache-Control "no-cache, max-age=0, must-revalidate"
+    </Files>
+</IfModule>

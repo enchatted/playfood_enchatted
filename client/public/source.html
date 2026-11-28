@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLAYFOOD: Source</title>
+<style>
+  /* PLAYFOOD «Αρχείο Εξερευνητών» — ίδια pixel-art παλέτα/τεχνική με το Grand Finale
+     certificate (CertificateScreen.jsx): βαθύ ναυτικό stage, περγαμηνές κάρτες, stepped
+     box-shadow πλαίσια, σκληρά bevels, ΚΑΘΟΛΟΥ border-radius / soft shadow / smooth gradient. */
+  :root{
+    /* brand χρώματα (brandColors.js / Brand Guideline PDF p.09-10) — κρατιούνται για το --accent */
+    --pf-green:#6DB06C; --pf-green-dk:#3E7B3D; --pf-orange:#E07F37; --pf-red:#D36244;
+    --pf-blue:#235FB7; --pf-purple:#533F8B; --pf-cream:#FBF6C9; --pf-yellow-soft:#F7E1A4;
+    --pf-yellow-green:#E0E07E; --pf-pink:#E5BDD1;
+    /* pixel-art παλέτα (PAL του certificate) */
+    --paper:#E9D29A; --paper-lite:#F2E2B6; --cream:#FFF8E1;
+    --ink:#3A2D1C; --ink-soft:rgba(58,45,28,.72); --ink-faint:rgba(58,45,28,.55);
+    --gold:#C9A24B; --gold-lite:#E7CC84; --gold-dark:#8A6A2B;
+    --wood:#6B4E2E; --wood-deep:#4C3826; --outline:#241608;
+    --stage:#0E3A40;
+    --accent:var(--pf-green); /* το JS το αλλάζει ανά πηγή */
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink); line-height:1.65;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background-color:var(--stage);
+    /* διακριτικό retro dither (σκακιέρα 8px) πάνω στο βαθύ φόντο — όπως το certificate */
+    background-image:repeating-conic-gradient(rgba(255,255,255,.035) 0% 25%, rgba(0,0,0,.05) 0% 50%);
+    background-size:8px 8px;
+    image-rendering:pixelated;
+  }
+
+  /* ── in-game top bar: συμπαγές ξύλο, σκληρό bevel, χωρίς border-radius ── */
+  .top{
+    position:relative; z-index:5;
+    background:var(--wood-deep);
+    padding:12px 22px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    box-shadow:inset 0 3px 0 rgba(255,255,255,.12), inset 0 -5px 0 rgba(0,0,0,.4), 0 5px 0 var(--outline);
+  }
+  .logo{
+    color:var(--cream); font-weight:900; letter-spacing:4px; font-size:18px;
+    text-shadow:3px 3px 0 var(--outline);
+  }
+  .logo .leaf{display:inline-block; transform:translateY(1px); margin-right:7px}
+  .backbtn{
+    margin-left:auto; color:var(--cream); font-size:12px; font-weight:800; letter-spacing:.5px;
+    cursor:pointer; background:var(--wood); border:0; border-radius:0; padding:8px 14px;
+    font-family:inherit; display:none;
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.2), inset -2px -2px 0 rgba(0,0,0,.4), 0 4px 0 var(--outline);
+  }
+  .backbtn:hover{background:#7d5c38}
+  .backbtn:active{transform:translateY(4px); box-shadow:inset 2px 2px 0 rgba(255,255,255,.2), inset -2px -2px 0 rgba(0,0,0,.4), 0 0 0 2px var(--outline)}
+
+  main{max-width:880px; margin:30px auto 60px; padding:0 22px}
+
+  /* ── hero: κάρτα-ευρετήριο με chunky stepped-corner pixel frame (outline→gold→wood) ── */
+  .hero{
+    position:relative; background:var(--paper);
+    border:4px solid var(--outline); border-radius:0;
+    margin:14px 16px 44px; padding:26px 30px 22px; image-rendering:pixelated;
+    box-shadow:
+      -4px 0 0 var(--outline),4px 0 0 var(--outline),0 -4px 0 var(--outline),0 4px 0 var(--outline),
+      -8px 0 0 var(--gold),8px 0 0 var(--gold),0 -8px 0 var(--gold),0 8px 0 var(--gold),
+      -12px 0 0 var(--wood-deep),12px 0 0 var(--wood-deep),0 -12px 0 var(--wood-deep),0 12px 0 var(--wood-deep),
+      inset 4px 4px 0 rgba(255,250,235,.35), inset -4px -4px 0 rgba(120,80,30,.18);
+  }
+  .hero .kicker{font-size:11px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; color:var(--gold-dark)}
+  /* main title: καθαρό espresso, ΧΩΡΙΣ retro text-shadow (η ανάγνωση πρώτη) */
+  .hero h1{
+    margin:10px 0 6px; font-weight:800;
+    font-size:clamp(25px,4.5vw,37px); line-height:1.16; letter-spacing:-.4px;
+    color:#2E2620;
+  }
+  .hero .pub{font-size:14px; color:var(--ink-soft); margin-bottom:16px; font-weight:600}
+  .chips{display:flex; gap:11px; flex-wrap:wrap; align-items:center}
+  /* chips = in-game pixel badges/buttons: συμπαγή, σκληρό bevel, χωρίς border-radius */
+  .chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; letter-spacing:.3px;
+    border:3px solid var(--outline); border-radius:0; padding:6px 12px; background:var(--cream); color:var(--ink);
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.5), inset -2px -2px 0 rgba(120,80,30,.16), 0 3px 0 var(--outline);
+  }
+  .chip.ok{background:var(--pf-green-dk); color:#fff;
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.28), inset -2px -2px 0 rgba(0,0,0,.28), 0 3px 0 var(--outline)}
+  .chip.game{background:var(--accent); color:#fff;
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.28), inset -2px -2px 0 rgba(0,0,0,.28), 0 3px 0 var(--outline)}
+  a.chip.link{background:var(--gold); color:var(--ink); border-color:var(--outline); text-decoration:none;
+    box-shadow:inset 2px 2px 0 var(--gold-lite), inset -2px -2px 0 var(--gold-dark), 0 4px 0 var(--outline)}
+  a.chip.link:hover{background:var(--gold-lite)}
+  a.chip.link:active{transform:translateY(4px);
+    box-shadow:inset 2px 2px 0 var(--gold-lite), inset -2px -2px 0 var(--gold-dark), 0 0 0 2px var(--outline)}
+  .hero .corner{position:absolute; top:-14px; right:20px; font-size:26px}
+
+  /* ── "γιατί" pinned note (pixel, χωρίς rotation) ── */
+  .why{
+    background:var(--pf-yellow-soft); border:3px solid var(--outline); border-radius:0;
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.45), inset -2px -2px 0 rgba(120,80,30,.16), 6px 6px 0 var(--outline);
+    padding:17px 22px; margin:0 18px 10px; font-size:15.5px; line-height:1.66; color:#2E2620;
+  }
+  .why b{display:block; font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; color:var(--gold-dark)}
+
+  .guide{font-size:13px; color:rgba(255,248,225,.85); margin:18px 18px 26px; text-align:center}
+  .guide .star{color:var(--gold-lite); font-weight:900}
+
+  /* ── document pages: σκληρό pixel πλαίσιο γύρω, αλλά ΚΑΘΑΡΟ ανοιχτό φόντο μέσα για ανάγνωση ── */
+  .page{
+    position:relative; background:#FDFBF7;
+    border:3px solid var(--outline); border-radius:0;
+    margin:0 18px 22px 54px; padding:18px 26px 18px 28px;
+    box-shadow:6px 6px 0 var(--wood-deep); image-rendering:pixelated;
+  }
+  .page::before{ /* spine, σαν περιθώριο τετραδίου */
+    content:""; position:absolute; left:11px; top:8px; bottom:8px; width:3px; background:var(--gold-dark);
+  }
+  .page .tab{
+    position:absolute; left:-54px; top:8px; width:40px; height:40px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:#fff; font-weight:900; font-size:15px;
+    border:3px solid var(--outline); border-radius:0;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.3), inset -2px -2px 0 rgba(0,0,0,.32), 0 4px 0 var(--outline);
+  }
+  /* reading text: μεγαλύτερο, πιο αραιό, σκούρο για μέγιστη αντίθεση πάνω στο ανοιχτό φόντο */
+  .page p{margin:0; font-family:Georgia,"Times New Roman",serif; font-size:17.5px; line-height:1.72; color:#26201A}
+
+  /* fact card = "μπαίνει στο παιχνίδι": συμμετρικό stepped pixel frame στο accent + ολόλευκο φόντο */
+  .page.fact{
+    background:#FFFFFF; border:3px solid var(--outline);
+    box-shadow:
+      -3px 0 0 var(--outline),3px 0 0 var(--outline),0 -3px 0 var(--outline),0 3px 0 var(--outline),
+      -6px 0 0 var(--accent),6px 0 0 var(--accent),0 -6px 0 var(--accent),0 6px 0 var(--accent);
+  }
+  .page.fact .tab{background:var(--gold); color:var(--ink)}
+  .page.fact .tab::after{content:"★"; position:absolute; top:-13px; right:-10px; font-size:16px; color:var(--gold); text-shadow:1px 1px 0 var(--outline)}
+  .usedtag{
+    display:inline-flex; align-items:center; gap:6px; background:var(--accent); color:#fff;
+    font-size:11px; font-weight:900; letter-spacing:.6px; border-radius:0; padding:5px 11px; margin-bottom:11px;
+    border:2px solid var(--outline); box-shadow:0 3px 0 var(--outline);
+  }
+  .notfound{
+    background:var(--paper); border:4px solid var(--outline); border-radius:0; padding:28px; text-align:center; color:var(--ink); margin:0 18px;
+    box-shadow:
+      -4px 0 0 var(--outline),4px 0 0 var(--outline),0 -4px 0 var(--outline),0 4px 0 var(--outline),
+      -8px 0 0 var(--gold),8px 0 0 var(--gold),0 -8px 0 var(--gold),0 8px 0 var(--gold);
+  }
+  .notfound code{background:var(--wood-deep); color:var(--cream); padding:2px 7px; border-radius:0}
+
+  footer{
+    max-width:880px; margin:0 auto; padding:8px 22px 56px; color:rgba(255,248,225,.7); font-size:12.5px; text-align:center;
+  }
+  footer .mandate{display:inline-block; border-top:3px solid var(--gold-dark); padding-top:16px}
+
+  @media print{
+    body{background:#fff !important; background-image:none !important; color:#222}
+    .top,.backbtn{display:none !important}
+    .hero,.page,.page.fact,.notfound,.why{box-shadow:none !important}
+    .hero h1{text-shadow:none}
+    .guide,footer{color:#444 !important}
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="logo"><span class="leaf">🌱</span>PLAYFOOD</span>
+  <button class="backbtn" id="backbtn" onclick="window.close()">← Back to the game</button>
+</div>
+<main>
+  <div class="hero">
+    <span class="corner">🔖</span>
+    <div class="kicker">📖 The Explorers' Archive</div>
+    <h1 id="title">…</h1>
+    <div class="pub" id="pub"></div>
+    <div class="chips" id="meta"></div>
+  </div>
+  <div id="whybox"></div>
+  <div class="guide" id="guide"></div>
+  <div id="main"></div>
+</main>
+<footer>
+  <span class="mandate">📖 From the PLAYFOOD source library. Every excerpt is verbatim and appears exactly as published by its original source.<br>PLAYFOOD · ENCHATTED P.C. · EU Grant Agreement No. 101196354 🇪🇺</span>
+</footer>
+
+<script>
+const RHEA = 'RHEA EU, Coalition of Health Professionals for Regenerative Agriculture';
+const SOURCES = {
+  'food-diversity': {
+    title:'Food Diversity', publisher:RHEA, accent:'var(--pf-green)',
+    url:'https://www.rheaeu.com/_files/ugd/f924f7_58ce6d16f41b456d9727360b620c980d.pdf',
+    usedBy:'Where Does It Grow (1.1)', unit:'Page', factPages:[3],
+    pages:[
+      'FOOD DIVERSITY',
+      'Around the world… there are thousands unique foods and flavours. Varieties of fruits, vegetables, grains, legumes, forming a diverse food spectrum. Food diversity forms the basis of our different civilizations. Food diversity can help increase resilience and protect against future threats.',
+      'Over the years humans have cultivated 6.000 plant species over time of existence. Nevertheless, in the last 50 years, the world mostly grows just nine species, making diets across the globe homogenised. Rice, wheat and maize provide 50% of all calories! Potatoes, barley, soy, sugar and palm oil account for another 25% of our calorie intake!',
+      'The paradox — The abundance of food produced by modern intensive agricultural systems is not proving to be a solution against malnutrition but commonly leads to diets lacking diversity. The loss of biodiversity in agricultural production and food supplies worldwide may cause important damages to global diets.',
+      'Food diversity can impact human’s health — Micronutrient deficiency is one of the most widespread forms of malnutrition all over the world. It is strictly linked to monotonous diets. Diversified farming systems can increase household dietary diversity and nutritional status. (Rani, 2017; Henjum, 2015; Steyn, 2007; FAO and FHI 360, 2016)',
+      'Diversity is at the heart of the farming system — Regenerative Agriculture mimics nature and supports a more sustainable farming system. Examples that benefit food diversity: climate resilient plants; intensive crop and diverse rotation; legumes as nitrogen fixers high on nutritional value.',
+      'Small-scale farmers can protect food diversity — Cultivating a variety of crops, also perennial crops, helps farmers improve soil fertility and diversify income streams, enhancing the availability of nutrient-dense produce in their local regions.',
+      'The role of communities — Diverse agricultural systems improve food security by strengthening: availability (what is grown); access (local markets); stability (ability to access food); utilisation (storage & cooking). (K. Waha et al. 2022)',
+      'Find a food that’s endangered! Support local farmers that share the same mission! Join us in our mission! — Coalition of Health Professionals for Regenerative Agriculture'
+    ]
+  },
+  'heirloom-seeds': {
+    title:'Heirloom Seeds & Seed Banks', publisher:RHEA, accent:'var(--pf-green)',
+    url:'https://www.rheaeu.com/_files/ugd/f924f7_8de1fb960de549c7b74f66185d00ab90.pdf',
+    usedBy:'Where Does It Grow (1.1) · Garden Planner (1.2)', unit:'Page', factPages:[7,8],
+    pages:[
+      'HEIRLOOM SEEDS & SEED BANKS',
+      'What are heirloom seeds? Heirloom seeds have been kept through multiple generations and are carefully saved to preserve genetics and plant in the future. They are open-pollinated, which means they rely on natural pollination from insects or wind.',
+      'After WW2, hybrid seeds came by artificial pollination, genetically altered to attain varieties resistant to frosts, droughts and chemical inputs. The most adverse effect of this phenomenon was a reduction in the crop-genetic diversity by a gapping of 75%.',
+      'Types of seeds today — GMO: altered through human intervention. ORGANIC: free from synthetic agricultural chemicals. HYBRIDS: created by crossing two different varieties of the same plant.',
+      'Why choosing heirloom crops? More resilient and self-sufficient production (you can save your own seeds). Heirloom varieties can have higher nutrient-density. You support food diversity by choosing different colours, sizes and origin history.',
+      'What are seed banks? A place where suitable conditions are maintained to conserve seed specimens of different plant species. “Well-funded, well-maintained seed banks are critical to reducing the negative impact of the climate crisis on our food systems globally.” (The Guardian, 2022)',
+      'The importance of seed banks — There are at least 250.000 edible plant species on our planet, however we depend only on three – corn, rice and wheat – for 60% of our total calorie consumption. There are roughly 1,700 seed banks. (The Guardian, 2022)',
+      'Seed banks around the world — The Millennium Seed Bank (England); the National Laboratory for Genetic Resources Preservation (US, 500,000 samples / ~12,000 species); The Potato Park, in Peru, run by Indigenous communities, houses around 2,300 of the 4,000 varieties of potatoes known in the world, and 23 of the more than 200 wild species; the Svalbard vault; the Vavilov Institute (Russia).',
+      'How can I save seeds? Know what to grow; start with open-pollinated seeds; learn about species; plan for seed saving; start with easy crops; grow enough plants; put a little space between varieties; collect your bounty; know when seeds are mature; know how to harvest; store seeds.',
+      'Save, grow and reproduce traditional seed varieties to safeguard biodiversity. Join us in our mission! — Coalition of Health Professionals for Regenerative Agriculture'
+    ]
+  },
+  'soil-degradation': {
+    title:'Soil Degradation & Food Security', publisher:RHEA, accent:'var(--pf-green)',
+    url:'https://www.rheaeu.com/_files/ugd/f924f7_2341285132f84008b31eb86722150508.pdf',
+    usedBy:'Soil Doctor (1.3)', unit:'Page', factPages:[2,3],
+    pages:[
+      'SOIL DEGRADATION & FOOD SECURITY',
+      'Soil degradation is caused by biophysical, social, economic and policy factors. The adverse impacts can now be easily masked by application of fertilizers and use of supplemental irrigation. Resource-poor farmers, who can’t afford chemical and external inputs, pay the consequences most.',
+      'Industrial agriculture won’t solve the problem! We have already degraded one third of arable land worldwide and business as usual will only get things worse. 95% of our food come from the soil! Unhealthy soils = Lack of resilience. No soils = No food.',
+      '“Decline in crops’ yields and agronomic production exacerbates food insecurity that currently affects 854 million people globally. Low concentrations of protein and micronutrients in crops (e.g., Zn, Fe, Se, B, I) aggravate malnutrition and hidden hunger that affects 3.7 billion people, especially children.”',
+      'Soil degradation affects food security — Directly: reduction in crop yields; decline in nutritional values. Indirectly: reduced input efficiency; loss of production; pollution of soil, air and water; loss of household income.',
+      'Wind erosion can cause serious health problems by blowing soil particles and microbes into the air, aggravating allergies and asthma. A salinized soilscape can cause windborne dust, altered ecology of mosquito-borne disease, and mental-health consequences.',
+      'WE ARE GROWING! Per capita food consumption is expected to increase to 3,050 kcal/day. Additional production must come from restoration of degraded/desertified soils through agroecological practices: water productivity, soil fertility, no-till farming and conservation agriculture.',
+      'What can we do? Follow a healthy and sustainable diet; talk and share this knowledge; whenever we can, buy products from local and agroecological farmers. “Choosing is still a privilege but knowing is our duty.”',
+      'If we don’t know our rights we will never fight for them. Let’s learn together what’s best for us and our planet and let’s claim it! — Coalition of Health Professionals for Regenerative Agriculture'
+    ]
+  },
+  'regenerative-agriculture': {
+    title:'Regenerative Agriculture', publisher:RHEA, accent:'var(--pf-green)',
+    url:'https://www.rheaeu.com/_files/ugd/f924f7_221a18881b3f4dfeb98213091b71ebe6.pdf',
+    usedBy:'Soil Doctor (1.3)', unit:'Page', factPages:[7],
+    pages:[
+      'REGENERATIVE AGRICULTURE',
+      'To re-generate: to develop and grow strong again; to bring new and more vigorous life; to make it more active and successful.',
+      'Regenerative agriculture is capable of being productive AND regenerating ecosystems: soils, water, biodiversity, microbiology, plants, animals, people.',
+      'Regenerative Agriculture is made up of a variety of agricultural practices. There is no standardization on the definition — it is context specific. It is outcome-based: we define regenerative by the results measured in the field.',
+      'Common regenerative farming practices: no-till cropping; conservation agriculture; holistic grazing; agroforestry; crop rotations and diversification; biofertilisers; microbial inoculants and stimulants; precision plant nutrition.',
+      'Benefits: improved soil health; resilience on farms; increased biodiversity; restoration of watersheds; CO2 sequestration; higher nutritional value in crops; health of ecosystems; environmental, social and economical benefits.',
+      'Regenerative agriculture and health — Practices have been correlated with enhanced nutritional profile of plant and animal foods. Healthy soil produces more nutrient dense food. Nutrient dense food has more beneficial health effects.',
+      'Healthy Soils → Healthy Crops → Healthy Humans. Join us in our mission!'
+    ]
+  },
+  'grow-regeneratively-home': {
+    title:'Gardening Regeneratively at Home', publisher:'Lisa Bronner', accent:'var(--pf-green)',
+    url:'https://www.lisabronner.com/gardening-regeneratively-at-home/',
+    usedBy:'Soil Doctor (1.3): the 5 remedies', unit:'Section', factPages:[1,2,3,4,5],
+    pages:[
+      'Cover the soil (mulch & cover crops): “Covering the soil prevents soil erosion, keeps weeds from gaining a foothold, and limits water loss…” Between seasons, introduce cover crops such as legumes (beans), which infuse the soil with nitrogen.',
+      'Don’t till: “…the beneficial microbiome of the soil… gets exposed to air and sunlight, where it quite likely will die…” Avoid disrupting the soil microbiome with excessive turning.',
+      'Compost / feed the soil: “Compost… is like the glue for the soil. It gives nitrogen and potassium and holds everything together.”',
+      'No chemicals: “Keep the soil alive. Don’t kill it with chemical pesticides and herbicides which poison the soil and create toxic runoff…”',
+      'Polyculture / layers: Plant at every level from ground-hugging cover crops to towering trees; beans (legumes) infuse nitrogen into the soil.'
+    ]
+  },
+  'three-sisters-nps': {
+    title:'The Three Sisters', publisher:'U.S. National Park Service, Tonto National Monument', accent:'var(--pf-green)',
+    url:'https://www.nps.gov/tont/learn/nature/the-three-sisters.htm',
+    usedBy:'Garden Planner (1.2)', unit:'Section', factPages:[1],
+    pages:[
+      'Corn serves as a trellis, providing a framework for the beans to grow and wrap around. Beans, acting as a natural fertilizer, add nitrogen to the soil, which benefits the growth of the corn and squash. Squash is typically planted between the corn and beans, and its ample leaves serve as a shield, blocking heat, retaining soil moisture and suppressing weed growth.'
+    ]
+  },
+  // ── Island 2 · Local & Seasonal ──
+  'eufic-seasonal': {
+    title:'Explore Seasonal Fruit and Vegetables in Europe', publisher:'EUFIC (European Food Information Council)', accent:'var(--pf-orange)',
+    url:'https://www.eufic.org/en/explore-seasonal-fruit-and-vegetables-in-europe',
+    usedBy:'Season Matcher (2.1) · Market Trip (2.2)', unit:'Section', factPages:[1],
+    pages:[
+      '“some fruits and vegetables are in season in some countries, while they are not in others.” The per-country, per-month dataset (EL/NL/BE × 12 months) is extracted verbatim in data/euficSeasonal.js.'
+    ]
+  },
+  'local-seasonal-food': {
+    title:'Local and Seasonal Food', publisher:'foodeducators.eu (EIT Food)', accent:'var(--pf-orange)',
+    url:'https://www.foodeducators.eu/resources/resource/local-and-seasonal-food',
+    usedBy:'Season Matcher (2.1) · Market Trip (2.2)', unit:'Section', factPages:[1,2],
+    pages:[
+      'Eating locally and seasonally offers many benefits, such as supporting local farmers, reducing the environmental impact of food transportation, and enjoying fresher, more nutrient-dense foods.',
+      'At the same time, global food trade plays a vital role in ensuring food security, providing dietary diversity.'
+    ]
+  },
+  'eu-local-food-systems': {
+    title:'Report on Local Farming and Direct Sales', publisher:'European Commission (EUR-Lex)', accent:'var(--pf-orange)',
+    url:'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A52013DC0866',
+    usedBy:'Market Trip (2.2)', unit:'Section', factPages:[1],
+    pages:[
+      'There is no uniform definition of the term ‘local area’. While various sources confirm that this term means a relatively small geographical area, there is no agreement on the distance, varying between 20 and 100 km from the point of production. Taking into account the wide-spread interpretations of the term ‘local area’, a definition at EU level would appear arbitrary.'
+    ]
+  },
+  'eufic-seasonality-environment': {
+    title:'Are Seasonal Fruit and Vegetables Better for the Environment?', publisher:'EUFIC (European Food Information Council)', accent:'var(--pf-orange)',
+    url:'https://www.eufic.org/en/healthy-living/article/are-seasonal-fruit-and-vegetables-better-for-the-environment',
+    usedBy:'Market Trip (2.2)', unit:'Section', factPages:[1,2,3],
+    pages:[
+      'While local and seasonal produce may have lower environmental impacts, global seasonality has helped not only expand global food markets but perhaps more importantly helped to provide a more varied and consistent supply of fruit and vegetables all year round, helping to increase the diversity of your diet and making sure you get a good balance of micronutrients throughout the year, especially for if you live in a country that has limited production seasons.',
+      'While the type of transportation might be significant for some fruit and vegetables, such as with air-freighted produce (e.g. berries, tropical fruit and green beans), the contribution of transportation to the carbon footprint is usually lower than the emissions coming from the methods of production.',
+      'fragile, highly perishable, and out of season soft fruit (berries, cherries) or exotic fruit (lychees, papayas, passion fruit) and out of season vegetables (asparagus, green beans, peas) are often transported by airplane because they spoil quicker. This greatly increases their GHG emissions.'
+    ]
+  },
+  'greenwashing-red-flags': {
+    title:'How to Spot Greenwashing: Red Flags', publisher:'Rainforest Alliance', accent:'var(--pf-orange)',
+    url:'https://www.rainforest-alliance.org/everyday-actions/how-to-spot-greenwashing-red-flags/',
+    usedBy:'Spot the Fake (2.3)', unit:'Section', factPages:[1,2,3,4,5],
+    pages:[
+      'Greenwashing—making false or misleading claims about the environmental benefits of a product or practice—is easy to define but can be hard to spot.',
+      'Words like \'eco-friendly\' and \'natural\' sound nice—but without proof, they mean nothing.',
+      'Green letters? Leafy imagery? Earthy vibes? …misleading packaging can fool you into thinking a product is more sustainable than it really is.',
+      'If it sounds too good to be true, it usually is! No product is single-handedly saving the planet… Dig deeper and look for details and data.',
+      'A company can\'t just stick our certification seal on their products. We have a robust verification system… with checks by independent auditors.'
+    ]
+  },
+  'food-labels': {
+    title:'Understanding Food Labels', publisher:'foodeducators.eu (EUFIC-backed)', accent:'var(--pf-orange)',
+    url:'https://www.foodeducators.eu/resources/resource/understanding-food-labels-ESL',
+    usedBy:'Spot the Fake (2.3)', unit:'Section', factPages:[1,2,3,4],
+    pages:[
+      '“name of the food, full ingredient list, allergen info, nutrition declaration, expiry or durability date… net quantity… country of origin (if relevant).”',
+      'Ingredients are “listed in descending order of weight.”',
+      '“No sugars were added… BUT may contain naturally occurring sugars.” A best-before date reflects best quality; once the use-by date has passed, a food is deemed unsafe.',
+      '“Just because a food product has a nutrition claim doesn\'t necessarily mean it\'s healthy.”'
+    ]
+  },
+  // ── Island 3 · Food Waste ──
+  'food-storage-fridge-freezer-cupboard': {
+    title:'How to Properly Store Food in the Fridge, Freezer and Cupboard', publisher:'EUFIC (European Food Information Council)', accent:'var(--pf-blue)',
+    url:'https://www.eufic.org/en/food-safety/article/how-to-properly-store-food-in-the-fridge-freezer-and-cupboard',
+    usedBy:'Fridge Manager (3.1) · Leftover Chef (3.3)', unit:'Section', factPages:[1,2,3,4,5,6,7,8],
+    pages:[
+      'Refrigerating: “Keep the fridge below 4°C… Keep the freezer at or below -18°C…” “Food items stored between 5°C and 60°C provide an optimal environment for bacteria…” “The cool temperature (at a maximum of 4°C) slows down the growth of harmful microbes.”',
+      'Refrigerating tips: “Most foods with a \'use by\' date (e.g., dairy, meat, ready meals, etc.) should be kept in the fridge.” “Store raw meat, fish and poultry in sealed containers, on the bottom shelf of your fridge. These raw foods can contain microbes that can cause illness.” “…keep cooked and ready-to-eat foods separated from raw foods.” “Keep foods that need to be used soon in the front…” (FIFO)',
+      'Myth-busting: “freezing food does not kill bacteria but rather slows down their growth significantly.” “Food that has been defrosted should never be refrozen unless it is cooked prior to refreezing.”',
+      'Cupboard storage: “Clean, dry and cool (below 25°C) shelves are the best place to store bread, dry food (in sealed bags or containers), unopened tins, jars and drinks.” “Some produce, particularly those from the tropics, such as bananas, are sensitive to cold, and should not be stored in the refrigerator.” “Potatoes and onions are best stored outside the refrigerator in a dark place to avoid sprouting.”',
+      'What foods should not be frozen? The source states: “Foods with high water content, such as lettuce, cucumbers, tomatoes, mushrooms, and soft fruits, tend to lose their crispness and become watery when thawed.”',
+      'Leftovers: “Eat leftovers within 2-3 days.” “Rice dishes should be used within 1 day, because rice can contain spores of Bacillus cereus that can survive cooking, and these can grow into bacteria.” “…do not heat it a second time and do not freeze it a second time either.”',
+      'Cooling down: “Remember the \'2-hour rule\': whether it is leftover, take-away, or just-bought, it is important to cool and place foods in the fridge within 2 hours.” Per-food shelf-life tables are image-locked in the source. Only verbatim text is cited in the game.',
+      'Freezing different foods and thawing: “Freeze bread immediately after purchase. Keep it in its packaging or an airtight bag and defrost individual slices when needed. Bread keeps well for up to three months.” “Larger fruits like apples, pears, bananas and mango can be best sliced into smaller pieces first.” “Some vegetables like onions, peppers, and leeks don’t need blanching.” “Most fish can be safely frozen for two to four months.” “The shelf life of meat in the freezer may differ: uncooked meat can be kept frozen for 4-12 months and uncooked poultry for 9-12 months.” Key points: “thaw completely before cooking (preferably in the fridge), never refreeze thawed food unless cooked”.'
+    ]
+  },
+  'food-waste-food-loss': {
+    title:'Food Waste and Food Loss (ESL)', publisher:'foodeducators.eu', accent:'var(--pf-blue)',
+    url:'https://www.foodeducators.eu/resources/resource/ESL-food-waste-and-food-loss',
+    usedBy:'Fridge Manager (3.1) · Meal Planner (3.2) · Leftover Chef (3.3)', unit:'Section', factPages:[1],
+    pages:[
+      'Food Waste and Food Loss (ESL). Source: foodeducators.eu. The lesson is login-walled. The public UNEP statistics used in the game ("1 billion meals of edible food… wasted every single day"; "over US$1 trillion worth of food… thrown away every year") are surfaced in Meal Planner.'
+    ]
+  },
+  // ── Island 4 · Climate & Circular ──
+  'circular-economy-rs': {
+    title:'The Rs of the Circular Economy', publisher:'European Commission (green-forum)', accent:'var(--pf-purple)',
+    url:'https://green-forum.ec.europa.eu/news/news-article-2024-11-28_en',
+    usedBy:'Circular City (4.2)', unit:'Section', factPages:[1,2,3],
+    pages:[
+      'The 10R framework: “going beyond the classic 3Rs, the 10R framework outlines common circular economy actions to keep products and materials in use and reduce waste.” (Verified live 2026-08-06. In the page HTML a footnote marker sits between “framework” and “outlines”, and there is a non-breaking space after “the”; neither changes a word.)',
+      'Note on the R names: The R NAMES are verbatim text on this page. The per-R DEFINITIONS are locked inside an image, so the game never transcribes them. Each R is taught through a concrete action plus a verbatim text passage from another registered source.',
+      'The list of the 10 Rs, in order (footnote 1, page text): “1 10 Rs: R0 Refuse, R1 Rethink, R2 Reduce, R3 Reuse, R4 Repair, R5 Refurbish, R6 Remanufacture, R7 Repurpose, R8 Recycle and R9 Recover.” It belongs to the sentence “Following the waste hierarchy and going beyond the classic 3Rs, the 10R framework outlines common circular economy actions to keep products and materials in use and reduce waste.” The repair card uses only the order of this list (reuse and repair come before recycling); it does not rank the benefit of each R.'
+    ]
+  },
+  'circular-city-amsterdam': {
+    title:'Shaping a Sharing Economy: Amsterdam', publisher:'Ellen MacArthur Foundation', accent:'var(--pf-purple)',
+    url:'https://www.ellenmacarthurfoundation.org/circular-examples/shaping-a-sharing-economy-amsterdam',
+    usedBy:'Circular City (4.2) · Planetary Boundaries (4.3)', unit:'Section', factPages:[1,2,3],
+    pages:[
+      'The commitment: “the first city in the world to commit to becoming a 100% circular economy by 2050, aiming to halve its use of virgin materials by 2030.” The model behind the plan: “Its five-year circular economy strategy to achieve this goal is based on Kate Raworth’s Doughnut Economics model, which achieves economic development while staying within planetary boundaries.”',
+      'What is shared, and what is prioritised: “sharing household items, space, modes of transport, and even food.” The three priority areas are “food and organic waste streams, consumer goods, and the built environment.”',
+      'Amsterdam Circular Monitor: “For example, the Monitor identified that emissions related to material use make up 78% of Amsterdam’s total CO2 emissions.” (All five passages verified live 2026-08-06 by two independent fetches. The page is now titled “Aiming for 100% circularity: Amsterdam”; the address is unchanged.)'
+    ]
+  },
+  'linear-circular-food': {
+    title:'From Linear to Circular Food Systems', publisher:'foodeducators.eu', accent:'var(--pf-purple)',
+    url:'https://www.foodeducators.eu/resources/resource/from-linear-to-circular-food-systems',
+    usedBy:'Circular City (4.2)', unit:'Section', factPages:[1],
+    pages:[
+      'Opening description: “Our current food system uses the linear economic model of ‘take-produce-consume-discard’, which assumes that economic growth can be perpetuated based on an abundance of resources and unlimited waste disposal.” (Verified live 2026-08-06. Until this date the game showed a shortened paraphrase of this sentence inside quotation marks; it now carries the sentence as published. The lesson itself is login-walled, so only this public description is used.)'
+    ]
+  },
+  'planetary-boundaries': {
+    title:'Planetary Boundaries', publisher:'Stockholm Resilience Centre', accent:'var(--pf-purple)',
+    url:'https://www.stockholmresilience.org/research/planetary-boundaries.html',
+    usedBy:'Planetary Boundaries (4.3)', unit:'Section', factPages:[1,2,3],
+    pages:[
+      'Scientifically defined guardrails: “They are scientifically defined guardrails that ensure the Earth\'s health. Stay within them, and the Earth stays our dependable home — breach them, and we risk irreversible damage to our very own life support system. Today, seven out of nine boundaries have been transgressed.” (One contiguous paragraph; the game quotes from it as three separate sentences and never welds them together.)',
+      'Why crossing matters: “Crossing boundaries increases the risk of generating large-scale abrupt or irreversible environmental changes.” The source hedges in its next sentence: “The impacts of these changes will not necessarily be immediate or drastic…”',
+      'What must be done: “To safeguard the Earth\'s resilience and stability, we must bring the planet back into its Planetary Boundaries.” (All passages verified live 2026-08-06 by two independent fetches. The 2025 update is reflected: seven of nine transgressed, with ocean acidification added.)'
+    ]
+  },
+  // ── Island 4 · Compost Creator (AUTHORITATIVE — partner-approved YPEN source) ──
+  'ypen-home-composting': {
+    title:'Home Composting Manual', publisher:'Hellenic Ministry of Environment and Energy (YPEN)', accent:'var(--pf-purple)',
+    url:'https://ypen.gov.gr/wp-content/uploads/2021/09/Manual-for-home-composting-leaflet-with-rules_EL_combined.pdf',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1,2],
+    pages:[
+      'Ποια υλικά μπορούν να κομποστοποιηθούν; Η πηγή αναφέρει: “ΠΡΑΣΙΝΑ ΑΠΟΒΛΗΤΑ (οργανικά απόβλητα πλούσια σε άζωτο (50%)): υπολείμματα φρούτων και λαχανικών, φλούδες από το καθάρισμα φρούτων και λαχανικών, υπολείμματα του καφέ, υπολείμματα τσαγιού, αγριόχορτα, μαραμένα λουλούδια, κομμένο γρασίδι, απόβλητα κήπων, ζωικά απόβλητα, ψωμί.” This Greek passage is the source for the stale bread item. (36-page PDF, verified 2026-08-06.)',
+      'Τι γίνεται με όσα δεν κομποστοποιούνται (σ. 12, «ΤΥΠΟΙ ΑΠΟΒΛΗΤΩΝ ΠΟΥ ΕΙΝΑΙ ΚΑΤΑΛΛΗΛΟΙ ΓΙΑ ΚΟΜΠΟΣΤΟΠΟΙΗΣΗ ΣΕ ΜΕΤΡΙΕΣ ΠΟΣΟΤΗΤΕΣ»): “Εάν η στρωμνή για μικρά ζώα δεν φέρει σαφή σήμανση ότι είναι βιοαποδομήσιμη, πρέπει να απορρίπτεται στον κάδο με τα υπόλοιπα απόβλητα.” The game uses this only to say that such a bin exists (Compost Creator intro, step 2). The manual\'s example is animal bedding; it is not a general rule for what goes in that bin. (Verified 2026-10-01.)',
+      'This manual is published in Greek. Its original Greek passages are shown here; translations in the game are explanations rather than verbatim quotations.'
+    ]
+  },
+  // ── Island 4 · Compost Creator (PROVISIONAL EPA candidates — partner decision pending) ──
+  'composting-home': {
+    title:'Composting At Home', publisher:'US EPA', accent:'var(--pf-purple)',
+    url:'https://www.epa.gov/recycle/composting-home',
+    usedBy:'Compost Creator (4.1) · Circular City (4.2) · Fridge Manager (3.1)', unit:'Section', factPages:[1,2,3],
+    pages:[
+      'What is composting? The source states: “Composting is the managed, aerobic (oxygen-required) biological decomposition of organic materials by microorganisms.” “The end product is compost, a biologically stable soil amendment that can be used to build soil health and provide nutrients to plants.” “Composting is nature’s way of recycling.”',
+      'What to add to a backyard compost pile: Nitrogen-Rich Materials (“Greens”): “Fruit and vegetable scraps” · “Grass clippings” · “Coffee grounds and paper filters” · “Paper tea bags (no staples)” · “Eggshells (crushed)”. Carbon-Rich Materials (“Browns”): “Dry leaves” · “Plant stalks and twigs” · “Shredded paper (non-glossy, uncolored)” · “Untreated wood chips”.',
+      'What to avoid adding to a backyard compost pile: “Meat, fish, and bones” · “Cheese and dairy products” · “Fats, oils, and grease” · “Cooked food (small amounts are fine)*†”. The source explains: “*These foods can attract animals. †Backyard composting piles generally do not reach high enough temperatures to fully decompose these materials. These materials can be composted at commercial composting facilities. Check first to make sure your specific facility accepts them.” (All passages verified live 2026-08-06.)'
+    ]
+  },
+  'recycle-common-recyclables': {
+    title:'How Do I Recycle Common Recyclables', publisher:'US EPA', accent:'var(--pf-purple)',
+    url:'https://www.epa.gov/recycle/how-do-i-recycle-common-recyclables',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1,2,3,4],
+    pages:[
+      'Plastics: “Some types of plastics are not accepted in community recycling programs. Check with your local recycling program to find out which types of plastic they accept.” “Can plastic bottles and caps be recycled? Yes, typically the caps and labels can be left on the bottles as well.” “Items with food debris cannot be recycled.”',
+      'Aluminum: “Both aluminum cans and foil can be recycled.” “Can I recycle aluminum foil? Yes, aluminum foil can be recycled. Make sure to remove any food residue before recycling.” (Verified live 2026-08-06. The source is American, so it spells the metal “aluminum”; the game\'s own copy uses the British “aluminium”.)',
+      'Food: “Food cannot be recycled. However, throwing food into the trash is not the best management option.” “EPA recommends reducing food waste by buying only what you need and by eating your leftovers.” This is the first half of the line above the steps on the Compost Creator intro card (key R). (Verified live 2026-10-01.)',
+      'Paper, gift wrap: “EPA encourages consumers to reuse gift bags, boxes, and tissue paper.” This is the second half of that line: the game names gift bags and gift boxes only, and does not extend it to other packaging. (Verified live 2026-10-01.)'
+    ]
+  },
+  'used-household-batteries': {
+    title:'Used Household Batteries', publisher:'US EPA', accent:'var(--pf-purple)',
+    url:'https://www.epa.gov/recycle/used-household-batteries',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1],
+    pages:[
+      'How to manage used batteries: “Certain batteries should NOT go in household garbage or recycling bins. This page can inform you on how to manage these batteries safely. Waste batteries can always be recycled or taken to household hazardous waste collection points.” (Verified live 2026-08-06.)'
+    ]
+  },
+  'eu-batteries-regulation': {
+    title:'Regulation (EU) 2023/1542 on batteries and waste batteries, Article 64', publisher:'European Union (EUR-Lex)', accent:'var(--pf-purple)',
+    url:'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32023R1542',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1],
+    pages:[
+      'Article 64, Obligations of end-users: “1. End-users shall discard waste batteries separately from other waste streams, including from mixed municipal waste.” “2. End-users shall discard waste batteries in designated separate collection points set up by, or in accordance with the specific arrangements concluded with, the producer or a producer responsibility organisation, in accordance with Articles 59, 60 and 61.” (Verified live 2026-10-16.)'
+    ]
+  },
+  // ── Island 4 · Compost Creator — drink cartons (option A, 01/10/2026). National schemes:
+  //    each describes ONE system; the game teaches groups and «follow your local rules». ──
+  'fostplus-drinkcartons': {
+    title:'Recyclageproces van drankkartons', publisher:'Fost Plus (Belgium)', accent:'var(--pf-purple)',
+    url:'https://www.betersorteren.be/recycleren/recyclageproces-van-drankkartons',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1],
+    pages:[
+      'What a drink carton is made of: “Het zijn bijzondere verpakkingen, samengesteld uit karton, een laag polyethyleen en vaak ook een fijn laagje aluminium.” “Drankkartons zijn samengestelde verpakkingen. Ze bevatten meestal vier verschillende materialen. Zoals de naam al aangeeft, bestaan ze voor het grootste deel – ongeveer 75% – uit karton. De verpakking heeft zowel aan de buitenkant als aan de binnenkant een laagje plastic (polyethyleen) dat de inhoud beschermt tegen vocht en lucht en zorgt voor een langdurige bewaring van dranken, soepen en sauzen. Voor bepaalde producten wordt de plastic laag aan de binnenkant gecombineerd met een laagje aluminium.” The game\'s card says that SOME cartons also have aluminium, because the source says «vaak ook» (often also) and «voor bepaalde producten» (for certain products), not all of them. The card gives no percentage. (Verified live 2026-10-01.)',
+      'How Belgium collects them: “Drankkartons (de \'D\' in PMD) worden via de blauwe PMD-zak bij je thuis ingezameld.” This is the Belgian system. The game does not teach it as a rule for every country.'
+    ]
+  },
+  'fostplus-pmd': {
+    title:'Zo sorteer je correct PMD', publisher:'Fost Plus (Belgium)', accent:'var(--pf-purple)',
+    url:'https://www.betersorteren.be/sorteren/zo-sorteer-je-correct-pmd',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1],
+    pages:[
+      'What goes in PMD: “Enkel Plastic verpakkingen, Metalen verpakkingen en Drankkartons mogen bij PMD.” In Belgium one bag collects plastic packaging, metal packaging and drink cartons together. It backs the intro\'s «one bin may collect some of these groups together». (Verified live 2026-10-01.)'
+    ]
+  },
+  'pontoverde-pacotes': {
+    title:'Amarelo ou Azul. Qual o ecoponto certo dos pacotes de bebida?', publisher:'Sociedade Ponto Verde (Portugal)', accent:'var(--pf-purple)',
+    url:'https://www.pontoverde.pt/recicla/amarelo-ou-azul-qual-o-ecoponto-certo-dos-pacotes-de-bebida/',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1],
+    pages:[
+      'Where they go in Portugal: “Os pacotes de bebidas cartonados, como os de leite, de natas, de sumo ou polpa de tomate, só devem ser colocados no ecoponto amarelo.” “Do ecoponto seguem para a estação de triagem, onde são separadas das restantes embalagens do ecoponto amarelo.” In the Portuguese system drink cartons share the yellow ecoponto with other packaging. It backs the intro\'s «one bin may collect some of these groups together». (Verified live 2026-10-01.)',
+      'A note for teachers. The page also lists a composition with percentages (cartão, polietileno, alumínio) for every pack. The game does not use those figures, and it does not say that every carton contains aluminium: the Fost Plus page says only some do.'
+    ]
+  },
+  'milieucentraal-drinkpakken': {
+    title:'Drinkpakken', publisher:'Milieu Centraal (Netherlands)', accent:'var(--pf-purple)',
+    url:'https://www.milieucentraal.nl/minder-afval/afval-scheiden/drinkpakken/',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1],
+    pages:[
+      'Where they go in the Netherlands: “Grote en kleine pakjes: je kunt ze in veel gemeenten gescheiden inleveren in de bak of zak voor plastic en metalen verpakkingen en drinkpakken (pmd).” “Check bij je gemeente hoe het bij jou is geregeld.” In many Dutch municipalities one bin collects plastic packaging, metal packaging and drink cartons together, and each municipality sets its own rule. It backs the intro\'s «one bin may collect some of these groups together» and «follow your local rules». (Verified live 2026-10-01.)'
+    ]
+  },
+  'eeaa-polites': {
+    title:'Πολίτες', publisher:'Ελληνική Εταιρεία Αξιοποίησης Ανακύκλωσης (ΕΕΑΑ)', accent:'var(--pf-purple)',
+    url:'https://www.herrco.gr/polites/',
+    usedBy:'Compost Creator (4.1)', unit:'Section', factPages:[1],
+    pages:[
+      'Ο μπλε κάδος: “Στον ΜΠΛΕ ΚΑΔΟ ρίχνουμε ΜΟΝΟ τις ΣΥΣΚΕΥΑΣΙΕΣ, δηλαδή:” “Συσκευασίες από Αλουμίνιο” · “Συσκευασίες από Πλαστικό” · “Συσκευασίες από Χαρτί & Χαρτοκιβώτια”, “π.χ. από ηλεκτρικές συσκευές, γάλα, χυμούς, δημητριακά, πίτσα, μπισκότα”. · “Συσκευασίες από Γυαλί”, “π.χ. μπουκάλια και βαζάκια, νερό, αναψυκτικά, αλκοολούχα ποτά, τρόφιμα κ.ά.” (the glass line also backs «Ανακυκλώνονται και γυάλινες συσκευασίες» in step 2, 01/10). In Greece one blue bin collects aluminium, plastic and paper packaging together, milk and juice cartons included (it also takes glass and tinplate packaging). The ΕΕΑΑ lists milk and juice cartons under paper packaging; the game gives them their own group, drink cartons, because they are layered (see Fost Plus). It backs the intro\'s «one bin may collect some of these groups together». (Verified live 2026-10-01.)'
+    ]
+  }
+};
+
+/* Why each source lives where it lives — our own editorial note (NOT source content). */
+const WHY = {
+  'heirloom-seeds': 'Feeds the «Did you know…?» cards of Where Does It Grow (1.1): where seeds come from, the 250,000 edible species and the Potato Park. Its seed-saving side carries over to Garden Planner (1.2). It appears just after a child places a food, when curiosity is open.',
+  'food-diversity': 'Gives the diversity numbers (6,000 species → only 9 today · rice+wheat+maize = 50% of calories). These appear as reveals in Where Does It Grow (1.1) when the child touches a grain, so the fact is tied to the action.',
+  'soil-degradation': 'This is the «disease» of Soil Doctor (1.3): 95% of food comes from the soil (intro), fertilizers hide the damage (the disguised bed), and «No soils = No food» appears only if the soil collapses. The source defines the problem the child is asked to cure.',
+  'regenerative-agriculture': 'Gives the «why» behind natural practices and the victory message in Soil Doctor (1.3): healthy soil → more nutritious food. It appears once all four beds are healed. The conclusion arrives after it is experienced, not before.',
+  'grow-regeneratively-home': 'The five treatment stations of Soil Doctor (1.3) come one-to-one from here: cover the soil, cover crops, no-till, compost, no chemicals. Each correct treatment shows the matching excerpt, bringing the action and its proof together.',
+  'three-sisters-nps': 'Documents the fact that appears in Garden Planner (1.2) when the player chooses the correct companion-plant combo (Three Sisters): verbatim NPS, verified character-by-character 2026-06-19.'
+};
+
+function get(name){ const u=new URLSearchParams(location.search); return u.get(name); }
+const key = get('src');
+const s = SOURCES[key];
+const titleEl = document.getElementById('title');
+const metaEl = document.getElementById('meta');
+const mainEl = document.getElementById('main');
+
+if (window.opener) document.getElementById('backbtn').style.display = 'inline-block';
+
+if(!s){
+  titleEl.textContent = 'Source not found';
+  mainEl.innerHTML = '<div class="notfound">Provide <code>?src=</code> one of: '+Object.keys(SOURCES).join(', ')+'</div>';
+}else{
+  document.documentElement.style.setProperty('--accent', s.accent);
+  document.title = 'PLAYFOOD: '+s.title;
+  titleEl.textContent = s.title;
+  document.getElementById('pub').textContent = '🏛️ ' + s.publisher;
+  metaEl.innerHTML =
+    '<span class="chip ok">✓ Verified</span>'+
+    '<span class="chip game">🎮 '+s.usedBy+'</span>'+
+    '<a class="chip link" href="'+s.url+'" target="_blank" rel="noopener">🌐 Open the original ↗</a>';
+  if (WHY[key]) {
+    document.getElementById('whybox').innerHTML =
+      '<div class="why"><b>✏️ Why this source, at this moment?</b>'+WHY[key]+'</div>';
+  }
+  const unitPl = (s.unit==='Page'?'pages':'sections');
+  document.getElementById('guide').innerHTML =
+    'The full source, '+s.pages.length+' '+unitPl+'. The '+unitPl+' marked <span class="star">★</span> are the ones children meet <b>verbatim, word-for-word,</b> inside the game.';
+  let html = '';
+  s.pages.forEach(function(txt, i){
+    const n = i+1;
+    const isFact = (s.factPages||[]).indexOf(n) !== -1;
+    html += '<div class="page'+(isFact?' fact':'')+'">'+
+      '<span class="tab">'+n+'</span>'+
+      (isFact?'<span class="usedtag">🎮 goes into the game</span>':'')+
+      '<p>'+txt+'</p></div>';
+  });
+  mainEl.innerHTML = html;
+}
+</script>
+</body>
+</html>

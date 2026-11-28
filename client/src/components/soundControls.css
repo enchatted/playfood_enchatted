@@ -1,0 +1,59 @@
+.pf-sound-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .4rem;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid #89704c;
+  border-radius: .5rem;
+  padding: .35rem .6rem .6rem;
+  color: #463723;
+  background: #fff7dc;
+}
+.pf-sound-controls legend { padding: 0 .35rem; font-weight: 700; }
+.pf-sound-controls button, .pf-sound-close {
+  font: inherit;
+  font-weight: 700;
+  padding: .35rem .65rem;
+  min-width: 44px;
+  min-height: 44px;
+  border: 2px solid #685237;
+  border-radius: .45rem;
+  color: #30251a;
+  background: #fffdf3;
+  cursor: pointer;
+}
+.pf-sound-controls button[aria-pressed="true"] { background: #245832; color: white; }
+.pf-sound-dialog {
+  margin: auto;
+  width: fit-content;
+  max-width: calc(100% - 2rem);
+  padding: 1rem;
+  border: 3px solid #685237;
+  border-radius: .8rem;
+  color: #30251a;
+  background: #fff7dc;
+  text-align: center;
+}
+.pf-sound-dialog::backdrop { background: rgb(12 24 32 / 58%); }
+.pf-sound-dialog h2 { margin: 0 0 .5rem; }
+.pf-sound-close { margin-top: .65rem; }
+.pf-map-audio-key {
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.pf-map-audio-key:focus-visible { outline: 3px solid white; outline-offset: 1px; }
+@media (min-width: 610px) and (max-height: 520px) {
+  [data-pause-overlay] .pf-pause-card {
+    display: grid !important;
+    grid-template-columns: 3fr 2fr;
+    align-items: center;
+  }
+  .pf-pause-title-band { grid-column: 1 / -1; }
+}

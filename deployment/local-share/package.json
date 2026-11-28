@@ -1,0 +1,11 @@
+{
+  "name": "playfood-local-review",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "scripts": {
+    "start": "node start-local.mjs"
+  }
+}

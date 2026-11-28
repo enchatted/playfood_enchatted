@@ -1,0 +1,14 @@
+# ─────────────────────────────────────────────────────────────
+#  PLAYFOOD — Statistics Panel accounts
+#
+#  Write one line per person, in the form:
+#      email : password
+#
+#  On first startup the password is SCRAMBLED AUTOMATICALLY and the line
+#  becomes unreadable. This is normal — you do not need to do anything.
+#
+#  To change a password: delete the line and write a new one with a plain
+#  password. It will be scrambled again on the next startup.
+# ─────────────────────────────────────────────────────────────
+
+admin@change-this.example : change-this-password
